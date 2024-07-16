@@ -1,0 +1,10 @@
+{
+  "url": "https://github.com/dustinnorwood/reflex-dom-echarts.git",
+  "rev": "7c70b5b017af1043b9bbbf88c8ee2e2053b448b9",
+  "date": "2022-03-12T12:14:07-05:00",
+  "path": "/nix/store/h3i2f97l86ymxavzy9q2wjqjk50ck654-reflex-dom-echarts",
+  "sha256": "0nlsnxq0z7yaj7jfi1vsgh8vfg74rcp4sds6lxin2z4dpxrzv281",
+  "fetchSubmodules": false,
+  "deepClone": false,
+  "leaveDotGit": false
+}

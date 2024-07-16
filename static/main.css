@@ -1,0 +1,284 @@
+/* Reset styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.6;
+  background-color: white;
+  color: #114;
+  padding: 0px;
+  opacity: 1.0;
+}
+
+.header {
+  display: flex;
+  margin: 0 auto;
+  padding-left: 10px;
+  padding-right: 10px;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: white;
+}
+
+.main {
+  margin: 0 auto;
+  padding-left: 5px;
+  padding-right: 5px;
+  justify-content: space-around;
+  align-items: center;
+  border: none;
+  left: 0;
+  width: 100%;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.info {
+  font-size: 12px;
+  text-align: center;
+  width: 70%;
+  margin-left: 15%;
+  margin-right: 15%;
+  height: 12px;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.error {
+  color: red;
+  font-size: 8px;
+  height: 12px;
+}
+
+.container {
+  max-width: 800px;
+  padding: 10px;
+  margin: 0 auto;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.item-info {
+  display: flex;
+  justify-content: left;
+}
+
+.container-item {
+  margin-right: 10px;
+}
+
+.trade-type-widget {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+}
+
+.trade-params-widget {
+  display: flex;
+  justify-content: space-between;
+}
+
+.form-item {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+}
+
+.buy {
+  background-color: #48c410;
+  color: white;
+  border-radius: 4px;
+  border: none;
+  padding: 8px 16px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  width: 100%;
+  cursor: pointer;
+  text-align: center;
+}
+
+.sell {
+  background-color: #c44810;
+  color: white;
+  border-radius: 4px;
+  border: none;
+  padding: 8px 16px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  width: 100%;
+  cursor: pointer;
+  text-align: center;
+}
+
+.option {
+  background-color: white;
+  color: black;
+  border-radius: 4px;
+  border: 1px solid black;
+  padding: 8px 16px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  width: 48.5%;
+  cursor: pointer;
+  text-align: center;
+}
+
+.cancel {
+  background-color: white;
+  color: black;
+  font-weight: bold;
+  width: 20px;
+  height: 20px;
+  margin-top: 5px;
+  border-radius: 6px;
+  border: 1px solid black;
+  text-align: center;
+}
+
+.selected {
+  font-weight: bold;
+}
+
+form {
+  width: 100%;
+}
+
+.form h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.form input[type="text"],
+.form input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #444;
+  border-radius: 4px;  
+}
+
+.item {
+  margin-bottom: 20px;
+  border: 1px solid #444;
+  border-radius: 4px;  
+  padding: 10px;
+}
+
+.item img {
+  width: 64px;
+  height: 64px;
+  aspect-ratio: 1 / 1;
+  margin: 2.5%;
+  overflow: hidden;
+  display: block;
+  border-radius: 4px;  
+  text-align: center;
+}
+
+.image-cropper {
+  max-width: 100px;
+  height: auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.image-cropper img{
+  display: block;
+  margin: 0 auto;
+  height: auto;
+  width: 150%; 
+  margin: 0 0 0 -20%;
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  -ms-border-radius: 50%;
+  -o-border-radius: 50%;
+  border-radius: 50%;  
+}
+
+.item h3 {
+  margin-bottom: 10px;
+}
+
+.item p {
+  margin-bottom: 10px;
+}
+
+.item-detail {
+  border: 1px solid #444;
+  border-radius: 4px;  
+  padding: 20px;
+}
+
+.item-detail img {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 20px;
+}
+
+.item-detail h2 {
+  margin-bottom: 10px;
+}
+
+.item-detail p {
+  margin-bottom: 10px;
+}
+
+.owned-item {
+  margin-bottom: 20px;
+  border: 1px solid #444;
+  border-radius: 4px;  
+  padding: 10px;
+}
+
+.owned-item img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.owned-item h3 {
+  margin-bottom: 10px;
+}
+
+.owned-item p {
+  margin-bottom: 10px;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1px solid #eee;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px; /* Adjust height as needed */
+  background-color: white;
+}
+
+.nav-item {
+  width: 32%;
+  height: 90%;
+  padding: 10px;
+  text-decoration: none;
+  border: none;
+  border-radius: 4px;
+  font-size: 18px; /* Adjust font size as needed */
+  text-align: center;
+  background-color: white;
+}
+
+.nav-item.active {
+  font-weight: bold; /* Example styling for active tab */
+  background-color: #f0f0f0;
+}

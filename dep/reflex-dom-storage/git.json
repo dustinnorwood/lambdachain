@@ -1,0 +1,12 @@
+{
+  "url": "https://github.com/dustinnorwood/reflex-dom-storage.git",
+  "rev": "f5c0a202019ee220f1e80efca1ac19e6f893f442",
+  "date": "2024-07-10T13:27:38-04:00",
+  "path": "/nix/store/yzlday5vnhvwyc6jxbvgf1vqlp24qsd6-reflex-dom-storage",
+  "sha256": "18qnb0rii3zjsir9gfdqm8lrf4ixs9zgaps3d41i3nw8j9k85f0z",
+  "hash": "sha256-H7iCZpKI2xEDaUNf9X7SPRKXKaq4uZdy1PKPGDNYFqM=",
+  "fetchLFS": false,
+  "fetchSubmodules": false,
+  "deepClone": false,
+  "leaveDotGit": false
+}

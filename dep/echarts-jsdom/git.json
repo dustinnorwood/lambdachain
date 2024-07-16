@@ -1,0 +1,12 @@
+{
+  "url": "https://github.com/dustinnorwood/echarts-jsdom.git",
+  "rev": "d364b62864cf9152e73a48ce11f6fb102c0b598a",
+  "date": "2024-07-14T16:31:51-04:00",
+  "path": "/nix/store/v03g17rsz3x68v7gs2829p4in52p75hf-echarts-jsdom",
+  "sha256": "0vxfs5qay9dg2axygb4jd62q4hg0qvmxwjpkf1d87bmqaq4pfv3d",
+  "hash": "sha256-bWx3CVa4roNacPNK3uvG4EGChWmSrOe7Eq8lr3DRrm8=",
+  "fetchLFS": false,
+  "fetchSubmodules": false,
+  "deepClone": false,
+  "leaveDotGit": false
+}

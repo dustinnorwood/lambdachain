@@ -1,0 +1,10 @@
+{
+  "url": "https://github.com/bgamari/html-parse.git",
+  "rev": "52fa100da5d4d20ad3497b4a09a31b71528a10fb",
+  "date": "2022-01-04T18:47:16-05:00",
+  "path": "/nix/store/q09prvahpjgrqvvb2sjaqgwxpfznjyx8-html-parse",
+  "sha256": "0mxpviha2zcrn5xw1k3v09wn9kk2qdfng5nr90z2y0l89hnxpl95",
+  "fetchSubmodules": false,
+  "deepClone": false,
+  "leaveDotGit": false
+}
