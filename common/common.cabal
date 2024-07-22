@@ -16,9 +16,9 @@ library
                , dependent-map
                , dependent-sum
                , dependent-sum-template
-               , ghcjs-base
                , ghcjs-dom
                , jsaddle
+               , jsaddle-dom
                , lens
                , memory
                , monad-control
