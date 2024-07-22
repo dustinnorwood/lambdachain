@@ -45,6 +45,21 @@ library
                , vector
   exposed-modules:
     Frontend
+    Frontend.Account
+    Frontend.Client
+    Frontend.Head
+    Frontend.HomePage
+    Frontend.ItemDetail
+    Frontend.ItemList
+    Frontend.Login
+    Frontend.Nav
+    Frontend.Shop
+    Frontend.Tokens
+    Frontend.Transactions
+    Frontend.Utils
+    Mercata.Data.Item
+    Mercata.Data.Trade
+    Obelisk.Frontend.Storage
   ghc-options: -Wall -O -fno-show-valid-hole-fits
                -- unsafe code
                -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields
