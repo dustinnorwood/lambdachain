@@ -58,7 +58,6 @@ library
     Common.Api.Namespace
     Common.Api.Validation
     Common.Api
-    Common.DeriveToJSVal
     Common.Route
     Common.Utils
     Common.Windowed
