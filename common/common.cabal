@@ -6,6 +6,35 @@ build-type: Simple
 library
   hs-source-dirs: src
   build-depends: base
+               , aeson
+               , base16-bytestring
+               , bytestring
+               , common
+               , containers
+               , cryptonite
+               , data-default
+               , data-fix
+               , dependent-map
+               , dependent-sum
+               , dependent-sum-template
+               , obelisk-frontend
+               , obelisk-route
+               , lens
+               , memory
+               , monad-control
+               , mtl
+               , obelisk-executable-config-lookup
+               , obelisk-generated-static
+               , obelisk-route
+               , primitive
+               , ref-tf
+               , scientific
+               , servant
+--               , servant-reflex
+               , text
+               , transformers
+               , unordered-containers
+               , vector
                , obelisk-route
                , text
   exposed-modules:
