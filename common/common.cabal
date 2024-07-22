@@ -16,13 +16,13 @@ library
                , dependent-map
                , dependent-sum
                , dependent-sum-template
-               , obelisk-frontend
-               , obelisk-route
+               , jsaddle
                , lens
                , memory
                , monad-control
                , mtl
                , obelisk-executable-config-lookup
+               , obelisk-frontend
                , obelisk-generated-static
                , obelisk-route
                , primitive
