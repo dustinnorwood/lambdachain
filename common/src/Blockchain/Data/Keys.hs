@@ -16,6 +16,7 @@ import           Blockchain.Data.RLP
 import           Blockchain.Data.Util
 import           Blockchain.Data.ExtendedWord
 import           Blockchain.Data.Keccak256
+import           Common.DeriveToJSVal
 import           Control.Lens hiding ((.=))
 import           Control.Monad ((<=<))
 import qualified Crypto.PubKey.ECC.ECDSA as E
@@ -34,7 +35,6 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import           Data.Word
-import           Frontend.DeriveToJSVal
 import           GHC.Generics
 import           Language.Javascript.JSaddle
 

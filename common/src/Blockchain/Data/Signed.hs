@@ -16,6 +16,7 @@ import           Blockchain.Data.Util
 import           Blockchain.Data.ExtendedWord
 import           Blockchain.Data.Keccak256
 import           Blockchain.Data.Keys
+import           Common.DeriveToJSVal
 import           Data.Aeson
 import           Data.ByteArray
 import           Data.ByteString (ByteString)
@@ -26,7 +27,6 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import           Data.Word
-import           Frontend.DeriveToJSVal
 import           GHC.Generics
 import           Language.Javascript.JSaddle
 

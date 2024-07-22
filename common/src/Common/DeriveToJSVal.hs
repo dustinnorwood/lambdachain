@@ -9,7 +9,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Frontend.DeriveToJSVal (toJSVal_generic, ToJSVal(..)) where
+module Common.DeriveToJSVal (toJSVal_generic, ToJSVal(..)) where
 
 import GHC.Generics
 import qualified Data.Text as T
