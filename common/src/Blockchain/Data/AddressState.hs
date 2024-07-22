@@ -15,7 +15,6 @@ import           Blockchain.Data.ExtendedWord
 import           Blockchain.Data.Keccak256
 import           Blockchain.Data.Keys
 import           Blockchain.Data.RLP
-import           Common.DeriveToJSVal
 import           Data.Aeson
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16

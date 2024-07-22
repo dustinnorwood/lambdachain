@@ -16,7 +16,6 @@ import           Blockchain.Data.Util
 import           Blockchain.Data.ExtendedWord
 import           Blockchain.Data.Keccak256
 import           Blockchain.Data.Keys
-import           Common.DeriveToJSVal
 import           Data.Aeson
 import           Data.ByteArray
 import           Data.ByteString (ByteString)

@@ -13,7 +13,6 @@ import           Blockchain.Data.ExtendedWord
 import           Blockchain.Data.Keccak256
 import           Blockchain.Data.Keys
 import           Blockchain.Data.RLP
-import           Common.DeriveToJSVal
 import           Data.Aeson
 import           Data.Bifunctor (first)
 import qualified Data.ByteString as BS

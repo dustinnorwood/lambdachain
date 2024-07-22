@@ -16,7 +16,6 @@ import           Blockchain.Data.RLP
 import           Blockchain.Data.Util
 import           Blockchain.Data.ExtendedWord
 import           Blockchain.Data.Keccak256
-import           Common.DeriveToJSVal
 import           Control.Lens hiding ((.=))
 import           Control.Monad ((<=<))
 import qualified Crypto.PubKey.ECC.ECDSA as E
@@ -45,18 +44,18 @@ data Signature = Signature {
 } deriving (Eq, Ord, Show, Generic)
 
 instance ToJSVal Signature where
-  toJSVal = toJSVal_generic id
+--  toJSVal = toJSVal_generic id
 
 instance FromJSVal Signature where
-  fromJSVal o = do
-    oVal <- val o
-    (rVal :: JSVal) <- oVal ^. js "r"
-    (sVal :: JSVal) <- oVal ^. js "s"
-    (vVal :: JSVal) <- oVal ^. js "v"
-    mR <- fromJSVal rVal
-    mS <- fromJSVal sVal
-    mV <- fromJSVal sVal
-    pure $ Signature <$> mR <*> mS <*> mV
+--  fromJSVal o = do
+--    oVal <- val o
+--    (rVal :: JSVal) <- oVal ^. js "r"
+--    (sVal :: JSVal) <- oVal ^. js "s"
+--    (vVal :: JSVal) <- oVal ^. js "v"
+--    mR <- fromJSVal rVal
+--    mS <- fromJSVal sVal
+--    mV <- fromJSVal sVal
+--    pure $ Signature <$> mR <*> mS <*> mV
 
 instance ToJSON Signature where
   toJSON (Signature r s v) = object
@@ -88,7 +87,7 @@ data PublicKey = PublicKey {
 } deriving (Eq, Ord, Show, Generic)
 
 instance ToJSVal PublicKey where
-  toJSVal = toJSVal_generic id
+--  toJSVal = toJSVal_generic id
 
 instance FromJSVal PublicKey where
   fromJSVal o = do
