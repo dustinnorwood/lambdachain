@@ -42,8 +42,26 @@ library
                , obelisk-route
                , text
   exposed-modules:
+    Blockchain.Data.Address
+    Blockchain.Data.AddressState
+    Blockchain.Data.ExtendedWord
+    Blockchain.Data.Keccak256
+    Blockchain.Data.Keys
+    Blockchain.Data.RLP
+    Blockchain.Data.Signed
+    Blockchain.Data.Subject
+    Blockchain.Data.SubjectAndCert
+    Blockchain.Data.Transaction
+    Blockchain.Data.TransactionResult
+    Blockchain.Data.Util
+    Common.Api.Errors
+    Common.Api.Namespace
+    Common.Api.Validation
     Common.Api
+    Common.DeriveToJSVal
     Common.Route
+    Common.Utils
+    Common.Windowed
   ghc-options: -Wall -O -fno-show-valid-hole-fits
                -- unsafe code
                -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields
