@@ -1,10 +1,20 @@
-{-# LANGUAGE FlexibleContexts, MultiParamTypeClasses, OverloadedStrings, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
+
 module Frontend.Utils where
 
 import Control.Lens    hiding (element)
 import Reflex.Dom.Core
 
+import           Blockchain.Data.Address
+import           Control.Applicative    (liftA2)
 import           Control.Monad          (mfilter)
+import           Control.Monad.Fix      (MonadFix)
 import           Control.Monad.Trans    (lift)
 import           Data.Bool              (bool)
 import qualified Data.Map               as Map
@@ -22,6 +32,18 @@ imgUrl :: Maybe Text -> Text
 imgUrl =
   fromMaybe "https://static.productionready.io/images/smiley-cyrus.jpg"
   . mfilter (not . T.null . T.strip)
+
+zipDynA :: (Applicative f, Reflex t) => Dynamic t (f a) -> Dynamic t (f b) -> Dynamic t (f (a,b))
+zipDynA = zipDynWith $ liftA2 (,)
+
+assetUrl :: Text
+-- assetUrl = "https://lambdachain.xyz/cirrus/search/BlockApps-Mercata-Asset?limit=100&order=root&or=(data->>isMint.eq.true,quantity.gt.0)&select=*,BlockApps-Mercata-Sale!BlockApps-Mercata-Sale_BlockApps-Mercata-Asset_fk(*,BlockApps-Mercata-Sale-paymentProviders(*)),BlockApps-Mercata-Asset-images(*),BlockApps-Mercata-Bid(*)"
+assetUrl = "https://lambdachain.xyz/cirrus/search/BlockApps-Mercata-Asset?limit=100&order=root&or=(data-%3E%3EisMint.eq.true,quantity.gt.0)&select=address,root,name,description,quantity,itemNumber,BlockApps-Mercata-Sale!BlockApps-Mercata-Sale_BlockApps-Mercata-Asset_fk(isOpen,address,price,quantity,BlockApps-Mercata-Sale-paymentProviders(value)),BlockApps-Mercata-Asset-images(value),BlockApps-Mercata-Bid(price,isOpen,address,quantity,purchaserCommonName)"
+{-# NOINLINE assetUrl #-}
+
+tokenPsAddr :: Address
+tokenPsAddr = read "41705c1d27122bba01fc5a36a9b1c59508bb4b32"
+{-# NOINLINE tokenPsAddr #-}
 
 -- These should probably be in obelisk!
 
@@ -150,3 +172,19 @@ dynButtonClass :: (DomBuilder t m, PostBuild t m) => Text -> Dynamic t Bool -> D
 dynButtonClass class' isLoading buttonText = do
   (e, _) <- elDynAttr' "button" (bool ("class" =: class') ("class" =: ("disabled " <> class')) <$> isLoading) $ dynText buttonText
   pure . fmapMaybe id $ bool (Just ()) Nothing <$> tag (current isLoading) (domEvent Click e)
+
+toggleWidget
+  :: ( PostBuild t m
+     , DomBuilder t m
+     , MonadHold t m
+     , MonadFix m
+     )
+  => m (Event t a) -> m (Event t b) -> m (Event t (Either a b)) 
+toggleWidget leftWidget rightWidget = mdo
+  isToggled <- holdDyn False $ fst <$> toggleE
+  let left = fmap ((True,) . Left) <$> leftWidget
+  toggleD <- widgetHold left . updated $ isToggled <&> \case
+    True -> fmap ((False,) . Right) <$> rightWidget
+    False -> left
+  let toggleE = switchDyn toggleD
+  pure $ snd <$> toggleE

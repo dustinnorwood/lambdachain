@@ -16,6 +16,7 @@ module Common.Route where
 
 import           Prelude hiding (id, (.))
 import           Blockchain.Data.Address
+import           Common.Utils
 import           Common.Windowed
 import           Control.Category
 import           Control.Lens hiding (bimap)
@@ -40,9 +41,6 @@ instance RDefault a => RDefault (Windowed a) where
 data BackendRoute :: * -> * where
   -- | Used to handle unparseable routes.
   BackendRoute_Missing :: BackendRoute ()
-
-tshow :: Show a => a -> Text
-tshow = T.pack . show
 
 queryEncoder :: (Applicative check, Applicative parse, Read a, Show a) => Encoder check parse (Maybe a) Text
 queryEncoder = unsafeMkEncoder $ EncoderImpl
@@ -82,6 +80,11 @@ searchItemsParamsEncoder = unsafeMkEncoder $ EncoderImpl
 searchItemsEncoder :: Encoder Identity Identity (Windowed Text) (Map Text (Maybe Text))
 searchItemsEncoder = windowedEncoder searchItemsParamsEncoder
 
+completeOrderParamsEncoder :: (Applicative check, Applicative parse) => Encoder check parse Text (Map Text (Maybe Text))
+completeOrderParamsEncoder = unsafeMkEncoder $ EncoderImpl
+  (pure . fromMaybe "" . join . M.lookup "assets")
+  (\s -> mkQueryList [("assets", Just s)])
+
 data FrontendRoute :: * -> * where
   FrontendRoute_Home :: FrontendRoute ()
   FrontendRoute_Shop :: FrontendRoute ()
@@ -91,6 +94,7 @@ data FrontendRoute :: * -> * where
   FrontendRoute_Register :: FrontendRoute ()
   FrontendRoute_Settings :: FrontendRoute ()
   FrontendRoute_ItemDetail :: FrontendRoute Address
+  FrontendRoute_CompleteOrder :: FrontendRoute Text
 
 data ProfileRoute :: * -> * where
   ProfileRoute_Favorites :: ProfileRoute ()
@@ -116,6 +120,7 @@ fullRouteEncoder = mkFullRouteEncoder
       FrontendRoute_Register -> PathSegment "register" $ unitEncoder mempty
       FrontendRoute_Settings -> PathSegment "settings" $ unitEncoder mempty
       FrontendRoute_ItemDetail -> PathSegment "item" $ singlePathSegmentEncoder . addressEncoder
+      FrontendRoute_CompleteOrder -> PathSegment "completeOrder" $ queryOnlyEncoder . completeOrderParamsEncoder
   )
 
 checkedEncoder :: Applicative check => Encoder check Identity (R (FullRoute BackendRoute FrontendRoute)) PageName

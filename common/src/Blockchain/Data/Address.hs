@@ -63,6 +63,10 @@ instance RLPSerializable Address where
   rlpEncode = rlpEncode . addressToWord160
   rlpDecode = Address . rlpDecode
 
+zeroAddress :: Address
+zeroAddress = read "0000000000000000000000000000000000000000"
+{-# NOINLINE zeroAddress #-}
+
 publicKeyToAddress :: PublicKey -> Address
 publicKeyToAddress = Address
                    . byteStringToWord160

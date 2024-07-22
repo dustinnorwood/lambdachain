@@ -2,10 +2,12 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Blockchain.Data.Keccak256 where
@@ -19,6 +21,7 @@ import           Data.ByteArray
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
+import qualified Data.ByteString.Char8 as C8
 import qualified Data.Text as T
 import           Data.Text.Encoding (decodeUtf8)
 import           GHC.Generics
@@ -34,6 +37,16 @@ instance Show Keccak256 where
        . B16.encode
        . keccak256ToByteString
 
+instance Read Keccak256 where
+  readsPrec _ = either
+                  (const [])
+                  ( (:[])
+                  . (,"")
+                  . Keccak256
+                  )
+              . B16.decode
+              . C8.pack
+
 instance ToJSVal Keccak256 where
   toJSVal = toJSVal . byteStringToWord256 . keccak256ToByteString
 
@@ -45,6 +58,10 @@ instance ToJSON Keccak256 where
 
 instance FromJSON Keccak256 where
   parseJSON = fmap (Keccak256 . word256ToByteString) . parseJSON
+
+emptyHash :: Keccak256
+emptyHash = hashMsg ""
+{-# NOINLINE emptyHash #-}
 
 hashMsg :: ByteString -> Keccak256
 hashMsg = Keccak256

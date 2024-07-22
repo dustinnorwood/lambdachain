@@ -69,7 +69,7 @@ instance ToJSON Transaction where
         "gasLimit" .= tgl,
         "to" .= tto,
         "value" .= show tval,
-        "data" .= decodeUtf8 (B16.encode td),
+        "codeOrData" .= decodeUtf8 (B16.encode td),
         "r" .= tr,
         "s" .= ts,
         "v" .= T.take 2 ((<> T.pack "00") . decodeUtf8 . B16.encode . integer2Bytes $ toInteger $ tv + 0x1b)
@@ -82,7 +82,7 @@ instance ToJSON Transaction where
         "gasPrice" .= tgp,
         "gasLimit" .= tgl,
         "value" .= show tval,
-        "init" .= decodeUtf8 (B16.encode tcode),
+        "codeOrData" .= decodeUtf8 (B16.encode tcode),
         "r" .= tr,
         "s" .= ts,
         "v" .= T.take 2 ((<> T.pack "00") . decodeUtf8 . B16.encode . integer2Bytes $ toInteger tv + 0x1b)

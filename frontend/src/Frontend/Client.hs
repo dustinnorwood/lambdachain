@@ -9,7 +9,6 @@ import Control.Lens
 import Reflex
 import Reflex.Dom.Core hiding (Namespace)
 
-import Control.Applicative     (liftA2)
 import Control.Monad           (join)
 import Data.Aeson              (decode, ToJSON, FromJSON)
 import Data.Dependent.Sum      (DSum(..))

@@ -124,4 +124,4 @@ byteStringToWord160 :: ByteString -> Word160
 byteStringToWord160 = Word160 . byteString2Integer . BS.take 20
 
 word160ToByteString :: Word160 -> ByteString
-word160ToByteString = BS.take 20 . (<> BS.replicate 20 0) . integer2Bytes . word160ToInteger
+word160ToByteString = (\b -> BS.drop (BS.length b - 20) b) . (BS.replicate 20 0 <>) . integer2Bytes . word160ToInteger

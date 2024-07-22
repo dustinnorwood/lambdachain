@@ -6,28 +6,64 @@
 }
 
 body {
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
   font-size: 12px;
+  font-family: "Lato", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
   line-height: 1.6;
-  background-color: white;
-  color: #114;
+  background-color: black;
+  color: #f0f0e0;
   padding: 0px;
   opacity: 1.0;
+}
+
+.dm-serif-display-regular {
+  font-family: "DM Serif Display", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.dm-serif-display-regular-italic {
+  font-family: "DM Serif Display", serif;
+  font-weight: 400;
+  font-style: italic;
 }
 
 .header {
   display: flex;
   margin: 0 auto;
+  font-family: "DM Serif Display", serif;
+  font-weight: 100;
+  font-style: normal;
   padding-left: 10px;
   padding-right: 10px;
-  justify-content: space-between;
+  justify-content: left;
   align-items: center;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #222;
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  background-color: white;
+  background-color: black;
+}
+
+h1 {
+  font-family: "DM Serif Display", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+h2 {
+  font-family: "DM Serif Display", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+h3 {
+  font-family: "DM Serif Display", serif;
+  font-weight: 400;
+  font-style: normal;
 }
 
 .main {
@@ -40,6 +76,20 @@ body {
   left: 0;
   width: 100%;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.searchbar {
+  margin-bottom: 5px;
+  width: 100%;
+}
+
+input[type="text"] {
+  width: 100%;
+  background-color: black;
+  color: #f0f0e0;
+  border: 1px solid #f0f0e0;
+  border-radius: 4px;
+  padding: 8px 16px;
 }
 
 .info {
@@ -75,13 +125,47 @@ body {
   margin-right: 10px;
 }
 
+.token-widget {
+  display: flex;
+  justify-content: space-between;
+  font-family: "DM Serif Display", serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 18px;
+  padding: 4px 8px;
+  border-bottom: 1px solid #222;
+  padding-bottom: 14px;
+}
+
+.buy-tokens button {
+  background-color: #e3b715;
+  color: black;
+  font-family: "DM Serif Display", serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 18px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 8px;
+}
+
 .trade-type-widget {
   display: flex;
   justify-content: space-between;
   margin-top: 5px;
 }
 
+.trade-params-widget-container {
+  display: flex;
+  justify-content: space-between;
+}
+
 .trade-params-widget {
+  display: flex;
+  justify-content: space-between;
+}
+
+.button-options {
   display: flex;
   justify-content: space-between;
 }
@@ -93,23 +177,36 @@ body {
 }
 
 .buy {
-  background-color: #48c410;
-  color: white;
+  background-color: black;
+  color: #f0f0e0;
+  border: 1px solid #48c410;
   border-radius: 4px;
-  border: none;
   padding: 8px 16px;
   margin-top: 5px;
   margin-bottom: 5px;
   width: 100%;
+  cursor: pointer;
+  text-align: center;
+}
+
+.option-buy {
+  background-color: black;
+  color: #f0f0e0;
+  border: 1px solid #48c410;
+  border-radius: 4px;
+  padding: 8px 16px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  width: 48.5%;
   cursor: pointer;
   text-align: center;
 }
 
 .sell {
-  background-color: #c44810;
-  color: white;
+  background-color: black;
+  color: #f0f0e0;
+  border: 1px solid #c44810;
   border-radius: 4px;
-  border: none;
   padding: 8px 16px;
   margin-top: 5px;
   margin-bottom: 5px;
@@ -118,11 +215,24 @@ body {
   text-align: center;
 }
 
-.option {
-  background-color: white;
-  color: black;
+.option-sell {
+  background-color: black;
+  color: #f0f0e0;
+  border: 1px solid #c44810;
   border-radius: 4px;
-  border: 1px solid black;
+  padding: 8px 16px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  width: 48.5%;
+  cursor: pointer;
+  text-align: center;
+}
+
+.option {
+  background-color: black;
+  color: #f0f0e0;
+  border: 1px solid #f0f0e0;
+  border-radius: 4px;
   padding: 8px 16px;
   margin-top: 5px;
   margin-bottom: 5px;
@@ -132,15 +242,19 @@ body {
 }
 
 .cancel {
-  background-color: white;
-  color: black;
+  background-color: black;
+  color: #f0f0e0;
+  border: 1px solid #f0f0e0;
   font-weight: bold;
   width: 20px;
   height: 20px;
   margin-top: 5px;
   border-radius: 6px;
-  border: 1px solid black;
   text-align: center;
+}
+
+.cancel-button {
+  float: right;
 }
 
 .selected {
@@ -166,9 +280,7 @@ form {
 }
 
 .item {
-  margin-bottom: 20px;
-  border: 1px solid #444;
-  border-radius: 4px;  
+  border-bottom: 1px solid #222;
   padding: 10px;
 }
 
@@ -204,7 +316,7 @@ form {
 }
 
 .item h3 {
-  margin-bottom: 10px;
+  margin-bottom: 0px;
 }
 
 .item p {
@@ -246,7 +358,7 @@ form {
 }
 
 .owned-item h3 {
-  margin-bottom: 10px;
+  margin-bottom: 2px;
 }
 
 .owned-item p {
@@ -254,16 +366,19 @@ form {
 }
 
 .navbar {
+  font-family: "DM Serif Display", serif;
+  font-weight: 100;
+  font-style: normal;
   display: flex;
   justify-content: space-around;
   align-items: center;
-  border-top: 1px solid #eee;
+  border-top: 1px solid #222;
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
   height: 60px; /* Adjust height as needed */
-  background-color: white;
+  background-color: black;
 }
 
 .nav-item {
@@ -275,10 +390,10 @@ form {
   border-radius: 4px;
   font-size: 18px; /* Adjust font size as needed */
   text-align: center;
-  background-color: white;
+  background-color: black;
 }
 
 .nav-item.active {
   font-weight: bold; /* Example styling for active tab */
-  background-color: #f0f0f0;
+  background-color: black;
 }

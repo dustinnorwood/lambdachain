@@ -20,7 +20,7 @@ import           Frontend.ItemDetail             (itemDetail)
 import           Frontend.Login                  (login, register)
 import           Frontend.Nav                    (nav)
 import           Frontend.Shop                   (shop)
-import           Frontend.Strats                 (stratBalance)
+import           Frontend.Tokens                 (tokenBalance)
 
 htmlBody
   :: forall t m
@@ -36,9 +36,11 @@ htmlBody = mdo
   mCredsDyn <- holdDyn Nothing $ switchDyn mCreds
   txE <- fmap switchDyn . elClass "div" "grid-container" $ do
     elClass "div" "header" $ do
-      (e,_) <- divClass "header-title" . el' "h1" $ text "Mercata Book"
+      (e,_) <- elAttr' "div" ("class" =: "header-title") $ do
+        el "h1" $ text "LambdaChain"
+        elAttr "div" ("style" =: "font-weight: bold;") $ el "h1" $ text ""
+      -- divClass "header-title-bold" . el' "h1" $ text "λ"
       setRoute $ (FrontendRoute_Home :/ ()) <$ domEvent Click e
-      divClass "strat-balance" $ stratBalance mCredsDyn
     el "br" blank
     el "br" blank
     elClass "div" "main" $ subRoute (pages mCredsDyn)
@@ -72,6 +74,10 @@ htmlBody = mdo
       FrontendRoute_Search   -> never <$ blank
       FrontendRoute_Login    -> never <$ login
       FrontendRoute_Register -> never <$ register
+      FrontendRoute_CompleteOrder -> do
+        pBE <- getPostBuild
+        setRoute $ (FrontendRoute_Home :/ ()) <$ pBE
+        pure never
 
 frontend :: Frontend (R FrontendRoute)
 frontend = Frontend (prerender_ htmlHead htmlHead) htmlBody

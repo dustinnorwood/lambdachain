@@ -36,6 +36,7 @@ library
                , reflex-dom-echarts
                , reflex-dom-storage
                , ref-tf
+               , saltine
                , scientific
                , servant
 --               , servant-reflex
