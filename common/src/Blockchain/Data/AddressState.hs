@@ -39,3 +39,6 @@ instance FromJSON AddressState where
                                 <$> o .: "nonce"
                                 <*> fmap read (o .: "balance")
   parseJSON o = fail $ "parseJSON AddressState: " ++ show o
+
+blankAddressState :: AddressState
+blankAddressState = AddressState 0 0

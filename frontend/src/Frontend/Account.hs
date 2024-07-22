@@ -24,6 +24,6 @@ account
      , SetRoute t (R FrontendRoute) m
      )
   => m ()
-account = divClass "container" $ do
+account = do
   logout
   pure ()

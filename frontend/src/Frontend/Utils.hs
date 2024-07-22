@@ -150,7 +150,7 @@ routeLinkDynAttr attrDyn rDyn m = do
 
 buttonClass :: (DomBuilder t m, PostBuild t m) => Text -> Text -> m (Event t ())
 buttonClass class' buttonText = do
-  (e, _) <- elAttr' "div" ("class" =: class') $ text buttonText
+  (e, _) <- elAttr' "button" ("class" =: class') $ text buttonText
   pure $ () <$ domEvent Click e
 
 selectableButton :: (DomBuilder t m, PostBuild t m) => Dynamic t Bool -> Text -> m (Event t ())

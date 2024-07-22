@@ -22,6 +22,19 @@ import           Frontend.Nav                    (nav)
 import           Frontend.Shop                   (shop)
 import           Frontend.Tokens                 (tokenBalance)
 
+headerWidget
+  :: forall t m
+  . ( ObeliskWidget t (R FrontendRoute) m
+    )
+  => m ()
+headerWidget = elClass "div" "grid-container" $ do
+  elClass "div" "header" $ do
+    (e,_) <- elAttr' "div" ("class" =: "header-title") $ do
+      el "h1" $ text "LambdaChain"
+      -- elAttr "div" ("style" =: "font-weight: bold;") $ el "h1" $ text ""
+    -- divClass "header-title-bold" . el' "h1" $ text "λ"
+    setRoute $ (FrontendRoute_Home :/ ()) <$ domEvent Click e
+
 htmlBody
   :: forall t m
   . ( ObeliskWidget t (R FrontendRoute) m
@@ -29,21 +42,11 @@ htmlBody
   => RoutedT t (R FrontendRoute) m ()
 htmlBody = mdo
   (mCreds :: Dynamic t (Event t (Maybe (Text, PrivateKey)))) <- prerender (pure never) $ do
-    pbE <- getPostBuild
-    let getCredsE = leftmost [txE, pbE]
-    mUsernameE <- fmap snd <$> getStorageItem ("mercata_username" <$ getCredsE)
+    pBE <- getPostBuild
+    mUsernameE <- fmap snd <$> getStorageItem ("mercata_username" <$ pBE)
     fmap (\(k,mv) -> (,) (T.drop 8 k) <$> mv) <$> getStorageItem (("key_for_" <>) <$> fmapMaybe id mUsernameE)
   mCredsDyn <- holdDyn Nothing $ switchDyn mCreds
-  txE <- fmap switchDyn . elClass "div" "grid-container" $ do
-    elClass "div" "header" $ do
-      (e,_) <- elAttr' "div" ("class" =: "header-title") $ do
-        el "h1" $ text "LambdaChain"
-        elAttr "div" ("style" =: "font-weight: bold;") $ el "h1" $ text ""
-      -- divClass "header-title-bold" . el' "h1" $ text "λ"
-      setRoute $ (FrontendRoute_Home :/ ()) <$ domEvent Click e
-    el "br" blank
-    el "br" blank
-    elClass "div" "main" $ subRoute (pages mCredsDyn)
+  elClass "div" "main" $ subRoute (pages mCredsDyn)
   pure ()
   where
     pages 
@@ -54,20 +57,32 @@ htmlBody = mdo
       FrontendRoute_Home     -> do
         let loggedOutEv = fmapMaybe id $ maybe (Just ()) (const Nothing) <$> updated mCreds
         setRoute $ (FrontendRoute_Login :/ ()) <$ loggedOutEv
-        nav 0
+        headerWidget
+        el "br" blank
+        el "br" blank
         homePage mCreds
+        nav 0
         pure never
       FrontendRoute_Shop     -> do
         let loggedOutEv = fmapMaybe id $ maybe (Just ()) (const Nothing) <$> updated mCreds
         setRoute $ (FrontendRoute_Login :/ ()) <$ loggedOutEv
+        headerWidget
+        el "br" blank
+        el "br" blank
         txE <- shop mCreds
         nav 1
         pure txE
       FrontendRoute_Account     -> do
+        headerWidget
+        el "br" blank
+        el "br" blank
         account
         nav 2
         pure never
       FrontendRoute_ItemDetail -> do
+        headerWidget
+        el "br" blank
+        el "br" blank
         itemDetail mCreds
         nav 1
         pure never

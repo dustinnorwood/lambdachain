@@ -67,13 +67,14 @@ homePage mCreds = divClass "container" $ mdo
   let ownerQuery = ("&ownerCommonName=eq." <>) <$> fmapMaybe id (leftmost [fmap fst <$> updated mCreds, username2])
   (mItemsEv :: Event t (Maybe [Item])) <- urlGET $ T.append assetUrl <$> ownerQuery
   let z = pure never
+  el "br" blank
   el "h2" $ text "My Items"
   el "br" blank
   let itemListWidget = itemList Sell (maybe "" fst <$> mCreds) $ postTransaction mCreds
   reload <- fmap switchDyn . widgetHold z $ ffor mItemsEv $ \case
     Just items@(_:_) -> itemListWidget $ aggregateItems items
     _ -> do
-      text "You don't own any items 😢"
+      divClass "info" $ text "You don't own any items."
       z
   el "br" blank
   el "br" blank

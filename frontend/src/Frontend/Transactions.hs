@@ -67,11 +67,11 @@ postTransaction mCreds tradeEv = do
         widgetHold (pure Nothing) (fmap Just . getAddr <$> pkE)
   addrDyn <- getAddress $ snd . fst <$> fmapMaybe id (updated credsAndItemDyn)
   let acctStateUrl = ("https://lambdachain.xyz/strato-api/eth/v1.2/account?address=" <>) . T.pack . show <$> fmapMaybe id (updated addrDyn)
-  (mAcctStateEv :: Event t (Maybe AddressState)) <- fmap (join . fmap listToMaybe) <$> urlGET acctStateUrl
+  (acctStateEv :: Event t AddressState) <- fmap (fromMaybe blankAddressState . (listToMaybe =<<)) <$> urlGET acctStateUrl
   let reorganize stuff = case stuff of
-        (Just ((u,pk),t), Just a) -> Just (u,pk,t,a)
+        (Just ((u,pk),t), a) -> Just (u,pk,t,a)
         _ -> Nothing
-  let allInfo = fmapMaybe id $ reorganize <$> attach (current credsAndItemDyn) mAcctStateEv
+  let allInfo = fmapMaybe id $ reorganize <$> attach (current credsAndItemDyn) acctStateEv
   mSignedTxDyn <- fmap join . prerender (pure $ constDyn Nothing) $ do
     let getSignedTxs (uname, pk, trade, acctState) = do
           let buildTransactions = case (_trade_op trade, _trade_action trade) of

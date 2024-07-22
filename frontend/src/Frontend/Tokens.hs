@@ -80,7 +80,11 @@ tokenWidget mCreds = mdo
   let closedWidget = divClass "token-widget" $ do
         divClass "token-balance" $ tokenBalance mCreds reload
         divClass "dm-serif-display-regular" $ divClass "buy-tokens" $ button "Buy LAM"
-  eReload <- toggleWidget ((False <$) <$> closedWidget) (buyTokensWidget mCreds)
+      openWidget = do
+        divClass "token-widget" $ 
+          divClass "token-balance" $ tokenBalance mCreds reload
+        buyTokensWidget mCreds
+  eReload <- toggleWidget ((False <$) <$> closedWidget) openWidget
   let reload = fmapMaybe id $ either (const Nothing) (bool Nothing (Just ())) <$> eReload
   pure $ void reload
 
@@ -124,8 +128,6 @@ buyTokensWidget mCreds = divClass "trade-widget" $ do
     let (mOrderHash :: Event t (Maybe Keccak256)) = readMaybe . T.unpack . T.take 64 . T.drop 2 <$> responseEv
     mOrderHashDyn <- holdDyn Nothing mOrderHash
     asdf <- holdDyn (Nothing,Nothing) (attach (current stripeDyn) mOrderHash)
-    let redirectUrlDyn = (\(ms, moh) -> maybe "" paymentServiceURL ms <> maybe "" checkoutRoute ms <> "?orderHash=" <> maybe "" tshow moh <> "&redirectUrl=http://localhost:8000") <$> asdf
-    dynText redirectUrlDyn
     redirectDyn <- widgetHold (pure ()) $ attach (current stripeDyn) mOrderHash <&> \(mStripe, mOrderHash) -> case liftA2 (,) mStripe mOrderHash of
       Nothing -> pure ()
       Just (stripe, orderHash) -> do
@@ -140,7 +142,6 @@ buyTokensWidget mCreds = divClass "trade-widget" $ do
             -- _ <- s ^. js1 ("log" :: String) resp
             pure ()
           pure ()
-    dynText $ tshow <$> redirectDyn
 
     pure $ leftmost [True <$ updated redirectDyn, False <$ cancelled]
 
