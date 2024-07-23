@@ -63,7 +63,7 @@ login = divClass "login-page" $ do
     divClass "info" $ do
       el "div" $ text "Don't have an account?"
       el "div" $ elAttr "a" ("href" =: "/register") $ text "Register instead."
-    let usernameEv = tagPromptlyDyn (value tUsername) clickEv
+    let usernameEv = tag (current $ value tUsername) clickEv
     mKeyExistsE :: Event t (Text, Maybe Text) <- getStorageItem $ ("key_for_" <>) <$> usernameEv
     mKeyExistsD <- holdDyn (Just "") $ snd <$> mKeyExistsE
     let keyExistsE = fmapMaybe id $ fmap fst . sequence <$> mKeyExistsE
