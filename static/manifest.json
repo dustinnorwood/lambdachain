@@ -1,0 +1,25 @@
+{
+    "name": "LambdaChain",
+    "short_name": "LambdaChain",
+    "background_color": "#000",
+    "description": "The easiest way to trade RWAs",
+    "display": "standalone",
+    "start_url": "/",
+    "icons": [
+        {
+          "src": "static/lc.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        },
+        {
+          "src": "static/logo_full.png",
+          "sizes": "1716x670",
+          "type": "image/png"
+        },
+        {
+          "src": "static/logo_cropped.png",
+          "sizes": "2450x402",
+          "type": "image/png"
+        }
+    ]
+}

@@ -4,13 +4,17 @@
 
 module Frontend where
 
+import           Blockchain.Data.ExtendedWord
 import           Blockchain.Data.Keys
 import           Common.Route
+import           Common.Utils
+import           Control.Lens               ((<&>))
+import           Control.Monad              (join, (<=<))
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import           Obelisk.Frontend           (Frontend (Frontend), ObeliskWidget)
 import           Obelisk.Frontend.Storage   (getStorageItem)
-import           Obelisk.Route.Frontend     (R, pattern (:/), RoutedT, setRoute, subRoute)
+import           Obelisk.Route.Frontend     (R, pattern (:/), RoutedT, setRoute, subRoute_)
 import           Reflex.Dom.Core            hiding (Namespace)
 
 import           Frontend.Account                (account)
@@ -35,64 +39,85 @@ headerWidget = elClass "div" "grid-container" $ do
     -- divClass "header-title-bold" . el' "h1" $ text "λ"
     setRoute $ (FrontendRoute_Home :/ ()) <$ domEvent Click e
 
+
+requireLoggedIn
+  :: forall t m
+  . ( ObeliskWidget t (R FrontendRoute) m
+    )
+  => m (Event t (Text, PrivateKey))
+requireLoggedIn = fmap switchDyn . prerender (pure never) $ do
+  pBE <- getPostBuild
+  mUsernameE :: Event t (Maybe Text) <- fmap snd <$> getStorageItem ("mercata_username" <$ pBE)
+  let noUsernameE = fmapMaybe (maybe (Just ()) (const Nothing)) mUsernameE
+  let usernameE = fmapMaybe id mUsernameE
+  mCreds :: Event t (Maybe (Text, PrivateKey)) <- fmap (\(k,mv) -> (,) (T.drop 8 k) <$> mv) <$> getStorageItem (("key_for_" <>) <$> usernameE)
+  let noPrivateKeyE = fmapMaybe (maybe (Just ()) (const Nothing)) mCreds
+  setRoute $ (FrontendRoute_Login :/ ()) <$ leftmost [noUsernameE, noPrivateKeyE]
+  pure $ fmapMaybe id mCreds
+
+loadingWidget
+  :: forall t m
+  . ( ObeliskWidget t (R FrontendRoute) m
+    )
+  => m ()
+loadingWidget = blank -- divClass "login-page" blank
+
 htmlBody
   :: forall t m
   . ( ObeliskWidget t (R FrontendRoute) m
     )
   => RoutedT t (R FrontendRoute) m ()
-htmlBody = mdo
-  (mCreds :: Dynamic t (Event t (Maybe (Text, PrivateKey)))) <- prerender (pure never) $ do
-    pBE <- getPostBuild
-    mUsernameE <- fmap snd <$> getStorageItem ("mercata_username" <$ pBE)
-    fmap (\(k,mv) -> (,) (T.drop 8 k) <$> mv) <$> getStorageItem (("key_for_" <>) <$> fmapMaybe id mUsernameE)
-  mCredsDyn <- holdDyn Nothing $ switchDyn mCreds
-  elClass "div" "main" $ subRoute (pages mCredsDyn)
+htmlBody = do
+  divClass "main" $ subRoute_ pages
   pure ()
   where
     pages 
-      :: Dynamic t (Maybe (Text, PrivateKey))
-      -> FrontendRoute a
-      -> RoutedT t a m (Event t ())
-    pages mCreds rte = case rte of
+      :: FrontendRoute a
+      -> RoutedT t a m ()
+    pages rte = case rte of
       FrontendRoute_Home     -> do
-        let loggedOutEv = fmapMaybe id $ maybe (Just ()) (const Nothing) <$> updated mCreds
-        setRoute $ (FrontendRoute_Login :/ ()) <$ loggedOutEv
-        headerWidget
-        el "br" blank
-        el "br" blank
-        homePage mCreds
-        nav 0
-        pure never
+        credsE <- requireLoggedIn
+        widgetHold_ loadingWidget $ credsE <&> \creds -> do
+          headerWidget
+          el "br" blank
+          el "br" blank
+          homePage creds
+          nav 0
+          pure ()
       FrontendRoute_Shop     -> do
-        let loggedOutEv = fmapMaybe id $ maybe (Just ()) (const Nothing) <$> updated mCreds
-        setRoute $ (FrontendRoute_Login :/ ()) <$ loggedOutEv
-        headerWidget
-        el "br" blank
-        el "br" blank
-        txE <- shop mCreds
-        nav 1
-        pure txE
+        credsE <- requireLoggedIn
+        widgetHold_ loadingWidget $ credsE <&> \creds -> do
+          headerWidget
+          el "br" blank
+          el "br" blank
+          _ <- shop creds
+          nav 1
+          pure ()
       FrontendRoute_Account     -> do
-        headerWidget
-        el "br" blank
-        el "br" blank
-        account
-        nav 2
-        pure never
+        credsE <- requireLoggedIn
+        widgetHold_ loadingWidget $ credsE <&> \_ -> do
+          headerWidget
+          el "br" blank
+          el "br" blank
+          account
+          nav 2
+          pure ()
       FrontendRoute_ItemDetail -> do
-        headerWidget
-        el "br" blank
-        el "br" blank
-        itemDetail mCreds
-        nav 1
-        pure never
-      FrontendRoute_Search   -> never <$ blank
-      FrontendRoute_Login    -> never <$ login
-      FrontendRoute_Register -> never <$ register
+        credsE <- requireLoggedIn
+        widgetHold_ loadingWidget $ credsE <&> \_ -> do
+          headerWidget
+          el "br" blank
+          el "br" blank
+          itemDetail
+          nav 1
+          pure ()
+      FrontendRoute_Search   -> blank
+      FrontendRoute_Login    -> login
+      FrontendRoute_Register -> register
       FrontendRoute_CompleteOrder -> do
         pBE <- getPostBuild
         setRoute $ (FrontendRoute_Home :/ ()) <$ pBE
-        pure never
+        pure ()
 
 frontend :: Frontend (R FrontendRoute)
 frontend = Frontend (prerender_ htmlHead htmlHead) htmlBody

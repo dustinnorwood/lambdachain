@@ -111,7 +111,7 @@ register = divClass "login-page" $ do
     (searchResultsE :: Event t (Maybe [Certificate])) <- urlGET $ ("https://lambdachain.xyz/cirrus/search/Certificate?select=commonName&commonName=eq." <>) <$> srchEv
     searchResults <- holdDyn Nothing (maybe Nothing listToMaybe <$> searchResultsE)
     let usernameEv = tagPromptlyDyn (value tUsername) clickEv
-    (mKeyExistsE :: Event t (Text, Maybe String)) <- getStorageItem $ ("key_for_" <>) <$> usernameEv
+    (mKeyExistsE :: Event t (Text, Maybe String)) <- getStorageItem $ T.append "key_for_" <$> usernameEv
     mKeyExistsD <- holdDyn Nothing $ snd <$> mKeyExistsE
     let mKeyDoesntExistE = (\(k, mv) -> maybe (Just k) (const Nothing) mv) <$> mKeyExistsE
     mPrivKeyD <- prerender (pure never) $ do

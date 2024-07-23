@@ -40,12 +40,16 @@ htmlHead :: (DomBuilder t m) => m ()
 htmlHead = do
   el "title" $ text "LambdaChain"
   -- these are not the typesafe links so that the fonts load relatively to the css.
-  elAttr "link" ("rel" =: "icon" <> "href" =: "static/lambdachain.png") $ blank
+  elAttr "link" ("rel"=:"manifest" <> "href"=:"static/manifest.json") blank
+  elAttr "link" ("rel" =: "icon" <> "href" =: "static/lambdachain.png") blank
   elAttr "link" ("rel" =: "preconnect" <> "href" =: "https://fonts.googleapis.com") blank
   elAttr "link" ("rel" =: "preconnect" <> "href" =: "https://fonts.gstatic.com") blank
   elAttr "link" ("rel" =: "stylesheet" <> "href" =: "https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=DM+Serif+Display:ital@0;1&display=swap") blank
   elAttr "link" ("rel" =: "stylesheet" <> "href" =: "https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap") blank
-  elAttr "meta" ("name"=:"viewport" <> "content"=:"width=device-width, initial-scale=1, shrink-to-fit=no") $ blank
+  elAttr "meta" ("name"=:"viewport" <> "content"=:"width=device-width; initial-scale=1; viewport-fit=cover") blank
+  elAttr "meta" ("name"=:"mobile-web-app-capable" <> "content"=:"yes") blank
+  elAttr "meta" ("name"=:"apple-mobile-web-app-capable" <> "content"=:"yes") blank
+  elAttr "meta" ("name"=:"apple-mobile-web-app-status-bar-style" <> "content"=:"black-translucent") blank
   elAttr "script" ("type" =: "text/javascript" <> "src" =: "static/bn.js") blank
   elAttr "script" ("type" =: "text/javascript" <> "src" =: "static/secp256k1.js") blank
   elAttr "script" ("type" =: "text/javascript" <> "src" =: "static/echarts.min.js") blank

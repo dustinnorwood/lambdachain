@@ -58,22 +58,21 @@ postTransaction
      , Prerender t m
      , Adjustable t m
      )
-  => Dynamic t (Maybe (Text, PrivateKey)) -> Event t Trade -> m (Async t Text)
-postTransaction mCreds tradeEv = do
-  let credsAndItemEv = (\(m,t) -> (,t) <$> m) <$> attach (current mCreds) tradeEv
-  credsAndItemDyn <- holdDyn Nothing credsAndItemEv
+  => (Text, PrivateKey) -> Event t Trade -> m (Async t Text)
+postTransaction creds@(username, pk) tradeEv = do
+  tradeDyn <- holdDyn Nothing $ Just <$> tradeEv
   let getAddress pkE = fmap join . prerender (pure $ constDyn Nothing) $ do
         let getAddr = fmap publicKeyToAddress . liftJSM . toPublicKey
         widgetHold (pure Nothing) (fmap Just . getAddr <$> pkE)
-  addrDyn <- getAddress $ snd . fst <$> fmapMaybe id (updated credsAndItemDyn)
+  addrDyn <- getAddress $ snd creds <$ tradeEv
   let acctStateUrl = ("https://lambdachain.xyz/strato-api/eth/v1.2/account?address=" <>) . T.pack . show <$> fmapMaybe id (updated addrDyn)
-  (acctStateEv :: Event t AddressState) <- fmap (fromMaybe blankAddressState . (listToMaybe =<<)) <$> urlGET acctStateUrl
+  acctStateEv <- fmap (fromMaybe blankAddressState . (listToMaybe =<<)) <$> urlGET acctStateUrl
   let reorganize stuff = case stuff of
-        (Just ((u,pk),t), a) -> Just (u,pk,t,a)
+        (Just t, a) -> Just (t,a)
         _ -> Nothing
-  let allInfo = fmapMaybe id $ reorganize <$> attach (current credsAndItemDyn) acctStateEv
+  let allInfo = fmapMaybe id $ reorganize <$> attach (current tradeDyn) acctStateEv
   mSignedTxDyn <- fmap join . prerender (pure $ constDyn Nothing) $ do
-    let getSignedTxs (uname, pk, trade, acctState) = do
+    let getSignedTxs (trade, acctState) = do
           let buildTransactions = case (_trade_op trade, _trade_action trade) of
                 (Create, Buy)  -> buildCreateBuyTransactions
                 (Create, Sell) -> buildCreateSellTransactions
@@ -81,7 +80,7 @@ postTransaction mCreds tradeEv = do
                 (Update, Sell) -> buildUpdateSellTransactions
                 (Delete, Buy)  -> buildDeleteBuyTransactions
                 (Delete, Sell) -> buildDeleteSellTransactions
-          Just <$> traverse (signTx pk) (buildTransactions uname acctState trade)
+          Just <$> traverse (signTx pk) (buildTransactions username acctState trade)
     widgetHold (pure Nothing) $ getSignedTxs <$> allInfo
   (txE :: Event t Keccak256) <- fmap (fmap $ fromMaybe emptyHash) . urlPOST $ (,) "https://lambdachain.xyz/strato-api/eth/v1.2/transaction" <$> fmapMaybe (listToMaybe =<<) (updated mSignedTxDyn)
   respDyn <- widgetHold (pure never) $ txE <&> \txHash -> mdo

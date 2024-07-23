@@ -53,14 +53,14 @@ shop
      , Prerender t m
      , SetRoute t (R FrontendRoute) m
      )
-  => Dynamic t (Maybe (Text, PrivateKey)) -> m (Event t ())
-shop mCreds = divClass "container" $ mdo
-  pbE <- getPostBuild
+  => (Text, PrivateKey) -> m (Event t ())
+shop creds = divClass "container" $ mdo
+  pBE <- getPostBuild
   searchTerm <- searchWidget
-  let getShopE = leftmost [tag (current searchTerm) reload, tag (current searchTerm) pbE, tag (current searchTerm) (updated mCreds), updated searchTerm]
+  let getShopE = leftmost [tag (current searchTerm) reload, tag (current searchTerm) pBE, updated searchTerm]
   (mItemsEv :: Event t (Maybe [Item])) <- urlGET $ T.append assetUrl . (\t -> if T.null t then "" else "&name=like.*" <> t <> "*") <$> getShopE
   let z = pure never
-  let itemListWidget = itemList Buy (maybe "" fst <$> mCreds) $ postTransaction mCreds
+  let itemListWidget = itemList Buy (fst creds) $ postTransaction creds
   reload <- fmap switchDyn . widgetHold z $ maybe z (itemListWidget . aggregateItems) <$> mItemsEv
   el "br" blank
   el "br" blank

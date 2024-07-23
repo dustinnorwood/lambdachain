@@ -58,14 +58,9 @@ itemDetail
      , TriggerEvent t m
      , Routed t Address m
      )
-  => Dynamic t (Maybe (Text, PrivateKey)) -> m ()
-itemDetail mCreds = divClass "container" $ mdo
-  pBE <- getPostBuild
+  => m ()
+itemDetail = divClass "container" $ mdo
   rootAddrDyn <- askRoute
-  username2 <- fmap (fmap snd) . getStorageItem $ "mercata_username" <$ pBE
-  let mUsernameE = leftmost [fmap fst <$> updated mCreds, username2]
-  let username = fmapMaybe id mUsernameE
-  usernameDyn <- holdDyn Nothing mUsernameE
   let assetUrlDyn = ("https://lambdachain.xyz/cirrus/search/BlockApps-Mercata-Asset?limit=100&order=root&or=(data->>isMint.eq.true,quantity.gt.0)&select=*,BlockApps-Mercata-Sale!BlockApps-Mercata-Sale_BlockApps-Mercata-Asset_fk(*,BlockApps-Mercata-Sale-paymentProviders(*)),BlockApps-Mercata-Asset-images(*),BlockApps-Mercata-Bid(*)&root=eq." <>) . tshow <$> rootAddrDyn
   itemEv <- fmap (fromMaybe emptyItem . listToMaybe . aggregateItems . fromMaybe []) <$> urlGETDyn assetUrlDyn
   itemDyn <- holdDyn emptyItem itemEv

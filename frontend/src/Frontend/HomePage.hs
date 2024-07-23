@@ -59,18 +59,17 @@ homePage
      , SetRoute t (R FrontendRoute) m
      , TriggerEvent t m
      )
-  => Dynamic t (Maybe (Text, PrivateKey)) -> m (Event t ())
-homePage mCreds = divClass "container" $ mdo
+  => (Text, PrivateKey) -> m (Event t ())
+homePage creds = divClass "container" $ mdo
   pBE <- getPostBuild
-  username2 <- fmap (fmap snd) . getStorageItem $ "mercata_username" <$ pBE
-  _ <- tokenWidget mCreds
-  let ownerQuery = ("&ownerCommonName=eq." <>) <$> fmapMaybe id (leftmost [fmap fst <$> updated mCreds, username2])
+  _ <- tokenWidget creds
+  let ownerQuery = ("&ownerCommonName=eq." <> fst creds) <$ pBE
   (mItemsEv :: Event t (Maybe [Item])) <- urlGET $ T.append assetUrl <$> ownerQuery
   let z = pure never
   el "br" blank
   el "h2" $ text "My Items"
   el "br" blank
-  let itemListWidget = itemList Sell (maybe "" fst <$> mCreds) $ postTransaction mCreds
+  let itemListWidget = itemList Sell (fst creds) $ postTransaction creds
   reload <- fmap switchDyn . widgetHold z $ ffor mItemsEv $ \case
     Just items@(_:_) -> itemListWidget $ aggregateItems items
     _ -> do

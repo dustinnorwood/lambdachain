@@ -37,11 +37,11 @@ itemList
      , MonadFix m
      , SetRoute t (R FrontendRoute) m
      )
-  => TradeAction -> Dynamic t Text -> (Event t Trade -> m (Async t Text)) -> [Item] -> m (Event t ())
-itemList action usernameDyn executeTrade items = switchDyn . fmap leftmost <$> do
+  => TradeAction -> Text -> (Event t Trade -> m (Async t Text)) -> [Item] -> m (Event t ())
+itemList action username executeTrade items = switchDyn . fmap leftmost <$> do
   simpleList (Prelude.filter isValid <$> constDyn items) $ \itemDyn -> divClass "item" $ mdo
     itemDetailClick <- itemInfoWidget itemDyn
-    tradeEv <- tradeButtons action usernameDyn itemDyn executeTrade
+    tradeEv <- tradeButtons action username itemDyn executeTrade
     setRoute $ (FrontendRoute_ItemDetail :/) <$> tagPromptlyDyn (root <$> itemDyn) itemDetailClick
     pure . fmapMaybe id $ bool Nothing (Just ()) <$> tradeEv
   where isValid i = name i /= "" && not (Prelude.null $ images i) && quantity i > 0
@@ -53,12 +53,12 @@ tradeButtons
      , MonadHold t m
      , MonadFix m
      )
-  => TradeAction -> Dynamic t Text -> Dynamic t Item -> (Event t Trade -> m (Async t Text)) -> m (Event t Bool)
-tradeButtons action usernameDyn itemDyn executeTrade = do
+  => TradeAction -> Text -> Dynamic t Item -> (Event t Trade -> m (Async t Text)) -> m (Event t Bool)
+tradeButtons action username itemDyn executeTrade = do
   pBE <- getPostBuild
   case action of
     Buy -> fmap switchDyn . widgetHold createTradeButton $
-      tag (current $ zipDyn usernameDyn itemDyn) pBE <&> \(username, item) -> case M.elems . bids $ biddedBy username item of
+      tag (current itemDyn) pBE <&> \item -> case M.elems . bids $ biddedBy username item of
         [] -> fmap (fmap $ either (const False) id) . toggleWidget createTradeButton $ tradeWidget action itemDyn executeTrade
         bs -> do
           b <- mdo
@@ -70,13 +70,13 @@ tradeButtons action usernameDyn itemDyn executeTrade = do
                   pure . fmap ((,False) . Just) $ leftmost [False <$ newClick, True <$ updateClick]
             toggleD <- widgetHold closed . updated $ isToggled <&> \case
               Just False -> fmap (Nothing,) <$> tradeWidget action itemDyn executeTrade
-              Just True -> fmap (Nothing,) <$> updateTradeWidget action usernameDyn itemDyn executeTrade
+              Just True -> fmap (Nothing,) <$> updateTradeWidget action username itemDyn executeTrade
               Nothing -> closed
             let toggleE = switchDyn toggleD
             pure toggleE
           pure $ snd <$> b
     Sell -> fmap switchDyn . widgetHold createTradeButton $
-      tag (current $ zipDyn usernameDyn itemDyn) pBE <&> \(username, item) -> case M.elems . utxos $ forSaleBy username item of
+      tag (current itemDyn) pBE <&> \item -> case M.elems . utxos $ forSaleBy username item of
         [] -> fmap (fmap $ either (const False) id) . toggleWidget createTradeButton $ tradeWidget action itemDyn executeTrade
         bs -> do
           b <- mdo
@@ -88,7 +88,7 @@ tradeButtons action usernameDyn itemDyn executeTrade = do
                   pure . fmap ((,False) . Just) $ True <$ updateClick -- leftmost [False <$ newClick, True <$ updateClick]
             toggleD <- widgetHold closed . updated $ isToggled <&> \case
               Just False -> fmap (Nothing,) <$> tradeWidget action itemDyn executeTrade
-              Just True -> fmap (Nothing,) <$> updateTradeWidget action usernameDyn itemDyn executeTrade
+              Just True -> fmap (Nothing,) <$> updateTradeWidget action username itemDyn executeTrade
               Nothing -> closed
             let toggleE = switchDyn toggleD
             pure toggleE
@@ -154,12 +154,12 @@ updateTradeWidget
      , MonadHold t m
      , MonadFix m
      )
-  => TradeAction -> Dynamic t Text -> Dynamic t Item -> (Event t Trade -> m (Async t Text)) -> m (Event t Bool)
-updateTradeWidget action usernameDyn itemDyn executeTrade = divClass "trade-widget" $ do
+  => TradeAction -> Text -> Dynamic t Item -> (Event t Trade -> m (Async t Text)) -> m (Event t Bool)
+updateTradeWidget action username itemDyn executeTrade = divClass "trade-widget" $ do
   cancelled <- divClass "cancel-button" $ (False <$) <$> buttonClass "cancel" "X"
   reload <- case action of
     Buy -> switchDyn . fmap leftmost <$> do
-      simpleList (M.elems . bids . uncurry biddedBy <$> zipDyn usernameDyn itemDyn) $ \bidDyn -> divClass "item" $ mdo
+      simpleList (M.elems . bids . biddedBy username <$> itemDyn) $ \bidDyn -> divClass "item" $ mdo
         qpDyn <- divClass "trade-params-widget-container" $ do
           pBE <- getPostBuild
           fmap join . widgetHold (pure $ constDyn Nothing) $ tagPromptlyDyn bidDyn pBE <&> \bid ->
@@ -186,7 +186,7 @@ updateTradeWidget action usernameDyn itemDyn executeTrade = divClass "trade-widg
           pure $ leftmost [finished updateTransaction, finished deleteTransaction]
         pure $ True <$ transactionFinished
     Sell -> switchDyn . fmap leftmost <$> do
-      simpleList (M.elems . utxos . uncurry forSaleBy <$> zipDyn usernameDyn itemDyn) $ \utxoDyn -> divClass "item" $ mdo
+      simpleList (M.elems . utxos . forSaleBy username <$> itemDyn) $ \utxoDyn -> divClass "item" $ mdo
         let askDyn = fromJust . sale <$> utxoDyn
         qpDyn <- divClass "trade-params-widget-container" $ do
           pBE <- getPostBuild
