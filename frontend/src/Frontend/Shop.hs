@@ -53,14 +53,14 @@ shop
      , Prerender t m
      , SetRoute t (R FrontendRoute) m
      )
-  => (Text, PrivateKey) -> m (Event t ())
-shop creds = divClass "container" $ mdo
+  => LoginInfo -> m (Event t ())
+shop loginInfo = divClass "container" $ mdo
   pBE <- getPostBuild
   searchTerm <- searchWidget
   let getShopE = leftmost [tag (current searchTerm) reload, tag (current searchTerm) pBE, updated searchTerm]
   (mItemsEv :: Event t (Maybe [Item])) <- urlGET $ T.append assetUrl . (\t -> if T.null t then "" else "&name=like.*" <> t <> "*") <$> getShopE
   let z = pure never
-  let itemListWidget = itemList Buy (fst creds) $ postTransaction creds
+  let itemListWidget = itemList Buy (loginInfoUsername loginInfo) $ postTransaction loginInfo
   reload <- fmap switchDyn . widgetHold z $ maybe z (itemListWidget . aggregateItems) <$> mItemsEv
   el "br" blank
   el "br" blank

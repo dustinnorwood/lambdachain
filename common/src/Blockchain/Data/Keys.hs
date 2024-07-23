@@ -1,3 +1,4 @@
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
@@ -12,6 +13,7 @@ module Blockchain.Data.Keys where
 
 import Reflex.Dom.Core
 
+import           Blockchain.Data.Address
 import           Blockchain.Data.RLP
 import           Blockchain.Data.Util
 import           Blockchain.Data.ExtendedWord
@@ -24,11 +26,12 @@ import           Crypto.PubKey.ECC.Types
 import           Crypto.Random.Entropy
 import           Data.Aeson
 import           Data.Aeson.Key
-import           Data.Bits ((.|.), shiftL, shiftR)
-import           Data.ByteArray
+import           Data.Bits ((.|.), shiftL, shiftR, xor)
+import           Data.ByteArray hiding (xor)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
+import           Data.Function (on)
 import           Data.List (unfoldr)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -81,6 +84,12 @@ instance ToJSVal PrivateKey where
 instance FromJSVal PrivateKey where
   fromJSVal = fmap (fmap PrivateKey) . fromJSVal
 
+instance ToJSON PrivateKey where
+  toJSON (PrivateKey p) = toJSON p
+
+instance FromJSON PrivateKey where
+  parseJSON = fmap PrivateKey . parseJSON
+
 data PublicKey = PublicKey {
   x :: Word256,
   y :: Word256
@@ -108,6 +117,38 @@ instance RLPSerializable PublicKey where
   rlpEncode = rlpEncode . decodeUtf8 . B16.encode . publicKeyToByteString
   rlpDecode = either (error "rlpDecode: PublicKey") byteStringToPublicKey . B16.decode . encodeUtf8 . rlpDecode
 
+data KeyInfo = KeyInfo
+  { keyInfoKey     :: Keccak256
+  , keyInfoAddress :: Address
+  } deriving stock (Eq, Show, Generic)
+
+instance ToJSON KeyInfo where
+  toJSON (KeyInfo k a) = object
+    [ (fromString "key") .= k
+    , (fromString "address") .= a
+    ]
+
+instance FromJSON KeyInfo where
+  parseJSON = withObject "KeyInfo" $ \o ->
+    KeyInfo <$> o .: (fromString "key")
+            <*> o .: (fromString "address")
+
+data LoginInfo = LoginInfo
+  { loginInfoUsername :: Text
+  , loginInfoKey      :: PrivateKey
+  } deriving stock (Eq, Show, Generic)
+
+instance ToJSON LoginInfo where
+  toJSON (LoginInfo u k) = object
+    [ (fromString "username") .= u
+    , (fromString "key") .= k
+    ]
+
+instance FromJSON LoginInfo where
+  parseJSON = withObject "LoginInfo" $ \o ->
+    LoginInfo <$> o .: (fromString "username")
+              <*> o .: (fromString "key")
+
 publicKeyToByteString :: PublicKey -> ByteString
 publicKeyToByteString (PublicKey x y) =
        BS.singleton 0x4
@@ -121,8 +162,29 @@ byteStringToPublicKey bs =
         (byteStringToWord256 $ BS.take 32 xy)
         (byteStringToWord256 $ BS.drop 32 xy)
 
-newPrivateKey :: IO PrivateKey
-newPrivateKey = PrivateKey . Word256 . E.private_d . snd <$> generate (getCurveByName SEC_p256k1)
+newPrivateKey :: MonadJSM m => m PrivateKey
+newPrivateKey = do
+  mPK <- liftJSM $ do
+    s <- jsg ("Secp256k1" :: String) 
+    pkBN <- s ^. js0 "newPrivateKey"
+    c <- jsg ("console" :: String) 
+    _ <- c ^. js1 "log" pkBN
+    fromJSVal pkBN
+  case mPK of
+    Just pk -> pure pk
+    Nothing -> newPrivateKey
+
+encryptPrivateKey :: Text -> PrivateKey -> ByteString
+encryptPrivateKey pw (PrivateKey pk) =
+  let pwBS = keccak256ToByteString . hashMsg $ encodeUtf8 pw
+      pkBS = word256ToByteString pk
+   in BS.pack $ (zipWith xor `on` BS.unpack) pwBS pkBS
+
+decryptPrivateKey :: Text -> ByteString -> PrivateKey
+decryptPrivateKey pw encPk =
+  let pwBS = keccak256ToByteString . hashMsg $ encodeUtf8 pw
+      pkBS = BS.pack $ (zipWith xor `on` BS.unpack) pwBS encPk
+   in PrivateKey $ byteStringToWord256 pkBS
 
 toPublicKey :: MonadJSM m => PrivateKey -> m PublicKey
 toPublicKey pk = liftJSM $ do
@@ -130,6 +192,15 @@ toPublicKey pk = liftJSM $ do
   pkBN <- s ^. js2 "uint256" pk ("hex" :: String)
   jsPub <- s ^. js1 "generatePublicKeyFromPrivateKeyData" pkBN
   fromJSValUnchecked jsPub
+
+publicKeyToAddress :: PublicKey -> Address
+publicKeyToAddress = Address
+                   . byteStringToWord160
+                   . BS.drop 12
+                   . keccak256ToByteString
+                   . hashMsg
+                   . BS.drop 1
+                   . publicKeyToByteString
 
 sign :: MonadJSM m => PrivateKey -> Keccak256 -> m Signature
 sign pk msg = liftJSM $ do

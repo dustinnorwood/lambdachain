@@ -11,7 +11,6 @@ module Blockchain.Data.Address where
 
 import           Blockchain.Data.ExtendedWord
 import           Blockchain.Data.Keccak256
-import           Blockchain.Data.Keys
 import           Blockchain.Data.RLP
 import           Data.Aeson
 import           Data.Bifunctor (first)
@@ -65,15 +64,6 @@ instance RLPSerializable Address where
 zeroAddress :: Address
 zeroAddress = read "0000000000000000000000000000000000000000"
 {-# NOINLINE zeroAddress #-}
-
-publicKeyToAddress :: PublicKey -> Address
-publicKeyToAddress = Address
-                   . byteStringToWord160
-                   . BS.drop 12
-                   . keccak256ToByteString
-                   . hashMsg
-                   . BS.drop 1
-                   . publicKeyToByteString
 
 addressEncoder :: Applicative check => Encoder check (Either Text) Address Text
 addressEncoder = unsafeMkEncoder $ EncoderImpl

@@ -79,15 +79,15 @@ tokenWidget
      , MonadIO (Performable m)
      , HasConfigs m
      )
-  => (Text, PrivateKey) -> m (Event t ())
-tokenWidget creds = mdo
+  => LoginInfo -> m (Event t ())
+tokenWidget loginInfo = mdo
   let closedWidget = divClass "token-widget" $ do
-        divClass "token-balance" $ tokenBalance creds reload
+        divClass "token-balance" $ tokenBalance loginInfo reload
         divClass "dm-serif-display-regular" $ divClass "buy-tokens" $ button "Buy LAM"
       openWidget = do
         divClass "token-widget" $ 
-          divClass "token-balance" $ tokenBalance creds reload
-        buyTokensWidget creds
+          divClass "token-balance" $ tokenBalance loginInfo reload
+        buyTokensWidget loginInfo
   eReload <- toggleWidget ((False <$) <$> closedWidget) openWidget
   let reload = fmapMaybe id $ either (const Nothing) (bool Nothing (Just ())) <$> eReload
   pure $ void reload
@@ -104,8 +104,8 @@ buyTokensWidget
      , MonadIO (Performable m)
      , HasConfigs m
      )
-  => (Text, PrivateKey) -> m (Event t Bool)
-buyTokensWidget creds = divClass "trade-widget" $ do
+  => LoginInfo -> m (Event t Bool)
+buyTokensWidget loginInfo = divClass "trade-widget" $ do
   pBE <- getPostBuild
   let tokenUrl = T.append assetUrl $ "&address=eq." <> tshow tokenPsAddr
   (mTokenItem :: Event t (Maybe Item)) <- fmap (listToMaybe =<<) <$> urlGET (tokenUrl <$ pBE)
@@ -128,7 +128,7 @@ buyTokensWidget creds = divClass "trade-widget" $ do
 
     let tradeDyn = (\((mqp,i), ms) -> (\(qp,stripe) -> Trade Create Market Buy stripe i qp) <$> liftA2 (,) mqp ms) <$> zipDyn qpiDyn (fmap paymentAddress <$> stripeDyn)
     let tradeEv' = fmapMaybe id $ tag (current tradeDyn) clickEv
-    transaction <- postTransaction creds tradeEv'
+    transaction <- postTransaction loginInfo tradeEv'
     let responseEv = finished transaction
     let (mOrderHash :: Event t (Maybe Keccak256)) = readMaybe . T.unpack . T.take 64 . T.drop 2 <$> responseEv
     mOrderHashDyn <- holdDyn Nothing mOrderHash
@@ -166,16 +166,15 @@ tokenBalance
      , MonadHold t m
      , Prerender t m
      )
-  => (Text, PrivateKey) -> Event t () -> m ()
-tokenBalance creds reload = elAttr "div" ("style" =: "font-size: 18px;") $ do
+  => LoginInfo -> Event t () -> m ()
+tokenBalance loginInfo reload = elAttr "div" ("style" =: "font-size: 18px;") $ do
   pBE <- getPostBuild
-  -- let commonNameQuery = ("&commonName=eq." <>) <$> leftmost [fst <$> updated creds, tag (fst <$> current creds) pBE]
-  let commonNameKeyQuery = ("&key=eq." <> fst creds) <$ leftmost [reload, pBE]
+  let commonNameKeyQuery = ("&key=eq." <> loginInfoUsername loginInfo) <$ leftmost [reload, pBE]
   -- let certUrl = ("https://lambdachain.xyz/cirrus/search/Certificate?limit=1" <>) <$> commonNameQuery
   -- (mCertsEv :: Event t (Maybe [Cert])) <- urlGET certUrl
   -- let certEv = fmapMaybe (maybe Nothing listToMaybe) mCertsEv
   -- let addressQuery = ("&key=eq." <>) . userAddress <$> certEv
-  let tokenUrl = T.append ("https://lambdachain.xyz/cirrus/search/gotan-TokenPaymentService-balances?address=eq." <> tshow tokenPsAddr <> "&select=value,address(*)&key=eq." <> fst creds) <$> commonNameKeyQuery
+  let tokenUrl = T.append ("https://lambdachain.xyz/cirrus/search/gotan-TokenPaymentService-balances?address=eq." <> tshow tokenPsAddr <> "&select=value,address(*)&key=eq." <> loginInfoUsername loginInfo) <$> commonNameKeyQuery
   (mTokenBalancesEv :: Event t (Maybe [TokenBalance])) <- urlGET tokenUrl
   text "LAM Balance: λ"
   _ <- widgetHold blank $ ffor mTokenBalancesEv $ \case

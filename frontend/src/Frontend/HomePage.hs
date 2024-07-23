@@ -61,17 +61,17 @@ homePage
      , TriggerEvent t m
      , HasConfigs m
      )
-  => (Text, PrivateKey) -> m (Event t ())
-homePage creds = divClass "container" $ mdo
+  => LoginInfo -> m (Event t ())
+homePage loginInfo = divClass "container" $ mdo
   pBE <- getPostBuild
-  _ <- tokenWidget creds
-  let ownerQuery = ("&ownerCommonName=eq." <> fst creds) <$ pBE
+  _ <- tokenWidget loginInfo
+  let ownerQuery = ("&ownerCommonName=eq." <> loginInfoUsername loginInfo) <$ pBE
   (mItemsEv :: Event t (Maybe [Item])) <- urlGET $ T.append assetUrl <$> ownerQuery
   let z = pure never
   el "br" blank
   el "h2" $ text "My Items"
   el "br" blank
-  let itemListWidget = itemList Sell (fst creds) $ postTransaction creds
+  let itemListWidget = itemList Sell (loginInfoUsername loginInfo) $ postTransaction loginInfo
   reload <- fmap switchDyn . widgetHold z $ ffor mItemsEv $ \case
     Just items@(_:_) -> itemListWidget $ aggregateItems items
     _ -> do

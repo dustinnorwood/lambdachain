@@ -1,6 +1,6 @@
 {-# LANGUAGE DataKinds, FlexibleContexts, FlexibleInstances, GADTs, GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase, MultiParamTypeClasses, OverloadedStrings, PatternSynonyms, RankNTypes #-}
-{-# LANGUAGE RecursiveDo, ScopedTypeVariables, TypeApplications                                #-}
+{-# LANGUAGE RecursiveDo, ScopedTypeVariables, TupleSections, TypeApplications                 #-}
 
 module Frontend where
 
@@ -12,8 +12,9 @@ import           Control.Lens               ((<&>))
 import           Control.Monad              (join, (<=<))
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
+import           Language.Javascript.JSaddle
 import           Obelisk.Frontend           (Frontend (Frontend), ObeliskWidget)
-import           Obelisk.Frontend.Storage   (getStorageItem)
+import           Obelisk.Frontend.Storage   (getSessionStorageItem)
 import           Obelisk.Route.Frontend     (R, pattern (:/), RoutedT, setRoute, subRoute_)
 import           Reflex.Dom.Core            hiding (Namespace)
 
@@ -40,20 +41,17 @@ headerWidget = elClass "div" "grid-container" $ do
     setRoute $ (FrontendRoute_Home :/ ()) <$ domEvent Click e
 
 
-requireLoggedIn
+getLoginInfo
   :: forall t m
   . ( ObeliskWidget t (R FrontendRoute) m
     )
-  => m (Event t (Text, PrivateKey))
-requireLoggedIn = fmap switchDyn . prerender (pure never) $ do
+  => m (Event t LoginInfo)
+getLoginInfo = fmap switchDyn . prerender (pure never) $ do
   pBE <- getPostBuild
-  mUsernameE :: Event t (Maybe Text) <- fmap snd <$> getStorageItem ("mercata_username" <$ pBE)
-  let noUsernameE = fmapMaybe (maybe (Just ()) (const Nothing)) mUsernameE
-  let usernameE = fmapMaybe id mUsernameE
-  mCreds :: Event t (Maybe (Text, PrivateKey)) <- fmap (\(k,mv) -> (,) (T.drop 8 k) <$> mv) <$> getStorageItem (("key_for_" <>) <$> usernameE)
-  let noPrivateKeyE = fmapMaybe (maybe (Just ()) (const Nothing)) mCreds
-  setRoute $ (FrontendRoute_Login :/ ()) <$ leftmost [noUsernameE, noPrivateKeyE]
-  pure $ fmapMaybe id mCreds
+  mLoginInfoE :: Event t (Maybe LoginInfo) <- fmap snd <$> getSessionStorageItem ("login_info" <$ pBE)
+  let notLoggedInE = fmapMaybe (maybe (Just ()) (const Nothing)) mLoginInfoE
+  setRoute $ (FrontendRoute_Login :/ ()) <$ notLoggedInE
+  pure $ fmapMaybe id mLoginInfoE
 
 loadingWidget
   :: forall t m
@@ -76,26 +74,26 @@ htmlBody = do
       -> RoutedT t a m ()
     pages rte = case rte of
       FrontendRoute_Home     -> do
-        credsE <- requireLoggedIn
-        widgetHold_ loadingWidget $ credsE <&> \creds -> do
+        loginInfoE <- getLoginInfo
+        widgetHold_ loadingWidget $ loginInfoE <&> \loginInfo -> do
           headerWidget
           el "br" blank
           el "br" blank
-          homePage creds
+          homePage loginInfo
           nav 0
           pure ()
       FrontendRoute_Shop     -> do
-        credsE <- requireLoggedIn
-        widgetHold_ loadingWidget $ credsE <&> \creds -> do
+        loginInfoE <- getLoginInfo
+        widgetHold_ loadingWidget $ loginInfoE <&> \loginInfo -> do
           headerWidget
           el "br" blank
           el "br" blank
-          _ <- shop creds
+          _ <- shop loginInfo
           nav 1
           pure ()
       FrontendRoute_Account     -> do
-        credsE <- requireLoggedIn
-        widgetHold_ loadingWidget $ credsE <&> \_ -> do
+        loginInfoE <- getLoginInfo
+        widgetHold_ loadingWidget $ loginInfoE <&> \_ -> do
           headerWidget
           el "br" blank
           el "br" blank
@@ -103,8 +101,8 @@ htmlBody = do
           nav 2
           pure ()
       FrontendRoute_ItemDetail -> do
-        credsE <- requireLoggedIn
-        widgetHold_ loadingWidget $ credsE <&> \_ -> do
+        loginInfoE <- getLoginInfo
+        widgetHold_ loadingWidget $ loginInfoE <&> \_ -> do
           headerWidget
           el "br" blank
           el "br" blank

@@ -17,6 +17,10 @@
         return uint256(randomBytes(32)).umod(P)//TODO red
     }
 
+    function newPrivateKey() {
+        return uint256(uint256(randomBytes(32)).umod(N))//TODO red
+    }
+
     const A  = uint256(0)
     const B  = uint256(7)
     const GX = uint256("79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798", 16)
@@ -253,6 +257,7 @@
     }
 
     exports.uint256 = uint256
+    exports.newPrivateKey = newPrivateKey
     exports.ecsign = ecsign
     exports.ecrecover = ecrecover
     exports.generatePublicKeyFromPrivateKeyData = generatePublicKeyFromPrivateKeyData

@@ -6,6 +6,7 @@
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Blockchain.Data.ExtendedWord where
@@ -27,6 +28,7 @@ import           Data.ByteArray
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
+import qualified Data.ByteString.Char8 as C8
 import           Data.List (unfoldr)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -34,28 +36,33 @@ import           Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import           Data.Word
 import           GHC.Generics
 import           Language.Javascript.JSaddle
+import           Text.Read (readMaybe)
 import Blockchain.Data.Util (byteString2Integer, integer2Bytes)
 
 newtype Word256 = Word256 {
   word256ToInteger :: Integer
-} deriving (Eq, Ord, Show, Read, Generic)
+} deriving (Eq, Ord, Generic)
+
+instance Show Word256 where
+  show = C8.unpack
+       . B16.encode
+       . word256ToByteString
+
+instance Read Word256 where
+  readsPrec _ = either
+                  (const [])
+                  ( (:[])
+                  . (,"")
+                  . byteStringToWord256
+                  )
+              . B16.decode
+              . C8.pack
 
 instance ToJSVal Word256 where
-  toJSVal = toJSVal
-          . decodeUtf8
-          . B16.encode
-          . integer2Bytes
-          . word256ToInteger
+  toJSVal = toJSVal . show
 
 instance FromJSVal Word256 where
-  fromJSVal v = do
-    mText <- fromJSVal v
-    case mText of
-      Nothing -> pure Nothing
-      Just t -> pure . fmap (Word256 . byteString2Integer)
-                     . either (const Nothing) Just
-                     . B16.decode
-                     $ encodeUtf8 t
+  fromJSVal v = (readMaybe =<<) <$> fromJSVal v
 
 instance ToJSON Word256 where
   toJSON = toJSON
@@ -79,28 +86,32 @@ byteStringToWord256 :: ByteString -> Word256
 byteStringToWord256 = Word256 . byteString2Integer . BS.take 32
 
 word256ToByteString :: Word256 -> ByteString
-word256ToByteString = BS.take 32 . (<> BS.replicate 32 0) . integer2Bytes . word256ToInteger
+word256ToByteString = (\b -> BS.drop (BS.length b - 32) b) . (BS.replicate 32 0 <>) . integer2Bytes . word256ToInteger
 
 newtype Word160 = Word160 {
   word160ToInteger :: Integer
-} deriving (Eq, Ord, Show, Read, Generic)
+} deriving (Eq, Ord, Generic)
+
+instance Show Word160 where
+  show = C8.unpack
+       . B16.encode
+       . word160ToByteString
+
+instance Read Word160 where
+  readsPrec _ = either
+                  (const [])
+                  ( (:[])
+                  . (,"")
+                  . byteStringToWord160
+                  )
+              . B16.decode
+              . C8.pack
 
 instance ToJSVal Word160 where
-  toJSVal = toJSVal
-          . decodeUtf8
-          . B16.encode
-          . integer2Bytes
-          . word160ToInteger
+  toJSVal = toJSVal . show
 
 instance FromJSVal Word160 where
-  fromJSVal v = do
-    mText <- fromJSVal v
-    case mText of
-      Nothing -> pure Nothing
-      Just t -> pure . fmap (Word160 . byteString2Integer)
-                     . either (const Nothing) Just
-                     . B16.decode
-                     $ encodeUtf8 t
+  fromJSVal v = (readMaybe =<<) <$> fromJSVal v
 
 instance ToJSON Word160 where
   toJSON = toJSON

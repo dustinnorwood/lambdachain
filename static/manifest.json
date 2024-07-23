@@ -7,18 +7,8 @@
     "start_url": "/",
     "icons": [
         {
-          "src": "lc.png",
-          "sizes": "512x512",
-          "type": "image/png"
-        },
-        {
-          "src": "logo_full.png",
-          "sizes": "1716x670",
-          "type": "image/png"
-        },
-        {
-          "src": "logo_cropped.png",
-          "sizes": "2450x402",
+          "src": "lambdachain_full.png",
+          "sizes": "2450x2450",
           "type": "image/png"
         }
     ]

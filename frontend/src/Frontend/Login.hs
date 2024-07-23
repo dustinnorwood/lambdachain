@@ -4,17 +4,21 @@ module Frontend.Login where
 
 import Reflex.Dom.Core
 
+import           Blockchain.Data.Address
+import           Blockchain.Data.Keccak256
 import           Blockchain.Data.Keys
 import           Blockchain.Data.Signed
 import           Blockchain.Data.Subject
 import           Blockchain.Data.SubjectAndCert
 import           Common.Utils
 import           Control.Applicative ((<|>))
+import           Control.Lens        ((<&>))
 import           Control.Monad (join)
 import           Control.Monad.Fix      (MonadFix)
 import           Control.Monad.IO.Class
 import           Data.Aeson
 import           Data.Bool              (bool)
+import qualified Data.ByteString as B
 import           Data.Maybe
 import           Data.Text              (Text)
 import qualified Data.Text    as T
@@ -22,6 +26,7 @@ import           Language.Javascript.JSaddle
 import           Obelisk.Frontend.Storage
 import           Obelisk.Route          (pattern (:/), R)
 import           Obelisk.Route.Frontend (SetRoute, setRoute)
+import           Text.Read              (readMaybe)
 
 import           Common.Route
 import           Frontend.Client (urlGET, urlPOST)
@@ -48,27 +53,41 @@ login = divClass "login-page" $ do
   divClass "login-title" . el "h1" $ text "LambdaChain"
   divClass "login-container" $ mdo
     el "h2" $ text "Login"
-    tUsername <- el "form" $ do
+    (tUsername, tPassword) <- el "form" $ do
       tUsername' <- inputElement $ def
         & inputElementConfig_elementConfig . elementConfig_initialAttributes .~
           ("placeholder" =: "Username" <> "type" =: "text")
       divClass "error" $ dynText $ maybe "Account not found" (const "") <$> mKeyExistsD
-      _ <- inputElement $ def
+      tPassword' <- inputElement $ def
         & inputElementConfig_elementConfig . elementConfig_initialAttributes .~
           ("placeholder" =: "Password" <> "type" =: "password")
-      el "br" blank
-      el "br" blank
-      pure tUsername'
+      divClass "error" $ dynText $ maybe "" (const "Incorrect password") <$> mPasswordMismatchD
+      pure (tUsername', tPassword')
     clickEv <- buttonClass "option-full" "Login"
     el "br" blank
     divClass "info" $ do
       el "div" $ text "Don't have an account?"
       el "div" $ elAttr "a" ("href" =: "/register") $ text "Register instead."
     let usernameEv = tag (current $ value tUsername) clickEv
-    mKeyExistsE :: Event t (Text, Maybe Text) <- getStorageItem $ ("key_for_" <>) <$> usernameEv
-    mKeyExistsD <- holdDyn (Just "") $ snd <$> mKeyExistsE
-    let keyExistsE = fmapMaybe id $ fmap fst . sequence <$> mKeyExistsE
-    storageEv <- putStorageItem $ (,) "mercata_username" . T.drop 8 <$> keyExistsE
+    mKeyExistsE :: Event t (Text, Maybe KeyInfo) <- getLocalStorageItem $ ("key_for_" <>) <$> usernameEv
+    mKeyExistsD <- holdDyn (Just $ KeyInfo emptyHash zeroAddress) $ snd <$> mKeyExistsE
+    let keyExistsE = fmapMaybe id $ sequence <$> mKeyExistsE
+    keyExistsEDyn <- holdDyn Nothing $ Just <$> keyExistsE
+    let usernameExistsE = fst <$> keyExistsE
+    usernameExistsEDyn <- holdDyn Nothing $ Just <$> usernameExistsE
+    let passAndEncPriv = (\(p,(u, KeyInfo k a)) -> (p,u,k,a)) <$> attach (current $ value tPassword) keyExistsE
+    passAndEncPrivDyn <- holdDyn Nothing $ Just <$> passAndEncPriv
+    let decPriv = (\(p,u,Keccak256 k,a) -> (u, decryptPrivateKey p k, a)) <$> passAndEncPriv
+    decPrivDyn <- holdDyn Nothing $ Just <$> decPriv
+    let getAddress pkE = fmap join . prerender (pure $ constDyn Nothing) $ do
+          let getAddr = fmap publicKeyToAddress . liftJSM . toPublicKey
+          widgetHold (pure Nothing) ((\(u,k,a) -> Just . (u,k,) . (a,) <$> getAddr k) <$> pkE)
+    addrDyn <- getAddress decPriv
+    let addrE = fmapMaybe id $ updated addrDyn
+    let passwordMismatchE = fmapMaybe (\(_,_,(a,a')) -> bool (Just ()) Nothing (a == a')) addrE
+    mPasswordMismatchD <- holdDyn Nothing $ Just <$> passwordMismatchE
+    let passwordMatchE = fmapMaybe (\(u,k,(a,a')) -> bool Nothing (Just $ LoginInfo (T.drop 8 u) k) (a == a')) addrE
+    storageEv <- putSessionStorageItem $ (,) "login_info" <$> passwordMatchE
     setRoute $ (FrontendRoute_Home :/ ()) <$ storageEv
     pure ()
 
@@ -88,22 +107,17 @@ register = divClass "login-page" $ do
   divClass "login-title" . el "h1" $ text "LambdaChain"
   divClass "login-container" $ mdo
     el "h2" $ text "Registration"
-    tUsername <- el "form" $ do
+    (tUsername, tPassword) <- el "form" $ do
       tUsername' <- inputElement $ def
         & inputElementConfig_elementConfig . elementConfig_initialAttributes .~
           ("placeholder" =: "Username" <> "type" =: "text")
       divClass "error" $ dynText $ maybe "" (const "Username already exists") <$> (uncurry (<|>) <$> zipDyn (fmap (const ()) <$> searchResults) (fmap (const ()) <$> mKeyExistsD))
-      _ <- inputElement $ def
+      tPassword' <- inputElement $ def
         & inputElementConfig_elementConfig . elementConfig_initialAttributes .~
           ("placeholder" =: "Password" <> "type" =: "password")
-      el "br" blank
-      el "br" blank
-      pure tUsername'
-    dynText $ T.append "tUsername: " . tshow <$> value tUsername
-    el "br" blank
-    clickedDyn <- holdDyn False $ leftmost [True <$ clickEv, False <$ postCertResultEv]
-    dynText $ T.append "clickedDyn: " . tshow <$> clickedDyn
-    el "br" blank
+      divClass "error" $ text ""
+      pure (tUsername', tPassword')
+    clickedDyn <- holdDyn False $ leftmost [True <$ clickEv, False <$ postCertResultEv, False <$ fmapMaybe id (updated (uncurry (<|>) <$> zipDyn (fmap (const ()) <$> searchResults) (fmap (const ()) <$> mKeyExistsD)))]
     mClickEv <- dynButtonClass "option-full" clickedDyn $ bool "Register" "Registering..." <$> clickedDyn
     let clickEv = fmapMaybe (bool (Just ()) Nothing . T.null) $ tag (current $ value tUsername) mClickEv
     el "br" blank
@@ -116,36 +130,36 @@ register = divClass "login-page" $ do
     srchEv <- debounce 0.5 . fmapMaybe isEmpty $ updated srch
     (searchResultsE :: Event t (Maybe [Certificate])) <- urlGET $ ("https://lambdachain.xyz/cirrus/search/Certificate?select=commonName&commonName=eq." <>) <$> srchEv
     searchResults <- holdDyn Nothing (maybe Nothing listToMaybe <$> searchResultsE)
-    dynText $ tshow <$> searchResults
-    el "br" blank
     let usernameEv = tag (current $ value tUsername) clickEv
-    (mKeyExistsE :: Event t (Text, Maybe String)) <- getStorageItem $ T.append "key_for_" <$> usernameEv
+    mKeyExistsE :: Event t (Text, Maybe KeyInfo) <- getLocalStorageItem $ ("key_for_" <>) <$> srchEv
     mKeyExistsD <- holdDyn Nothing $ snd <$> mKeyExistsE
-    dynText $ T.append "mKeyExistsD: " . tshow <$> mKeyExistsD
-    el "br" blank
-    let mKeyDoesntExistE = (\(k, mv) -> maybe (Just k) (const Nothing) mv) <$> mKeyExistsE
-    mPrivKeyD <- prerender (pure never) $ do
-      privKey <- liftIO newPrivateKey
-      pure $ fmap (flip (,) privKey) <$> mKeyDoesntExistE
-    mPrivKey <- holdDyn Nothing $ switchDyn mPrivKeyD
-    dynText $ T.append "mPrivKey: " . tshow <$> mPrivKey
-    el "br" blank
-    let privKeyE = fmapMaybe id $ switchDyn mPrivKeyD
-    keyE <- putStorageItem privKeyE
-    let usernameAndKeyE = (\(k,v) -> (T.drop 8 k, v)) <$> keyE
-    _ <- putStorageItem $ (,) "mercata_username" . T.drop 8 . fst <$> keyE
+    let mKeyDoesntExistE = (\(mki, u) -> maybe (Just u) (const Nothing) mki) <$> attach (current mKeyExistsD) usernameEv
+    mPrivKey <- fmap join . prerender (pure $ constDyn Nothing) $ widgetHold (pure Nothing) $ mKeyDoesntExistE <&> \case
+      Nothing -> pure Nothing
+      Just k -> do
+        privKey <- liftJSM newPrivateKey
+        pure $ Just (k, privKey)
+    let privKeyE = fmapMaybe id $ updated mPrivKey
+    let attachAddress pkE = fmap join . prerender (pure $ constDyn Nothing) $ do
+          let getAddr = fmap publicKeyToAddress . liftJSM . toPublicKey
+          widgetHold (pure Nothing) ((\(u,pk) -> Just . (u,) . (pk,) <$> getAddr pk) <$> pkE)
+    uPkAddrE <- fmapMaybe id . updated <$> attachAddress privKeyE
+    let passAndPriv = (\(p,(u,(k,a))) -> (p,u,k,a)) <$> attach (current $ value tPassword) uPkAddrE
+        encPriv = (\(p,u,k,a) -> (p,u, encryptPrivateKey p k, a)) <$> passAndPriv
+    mPassAndPriv <- holdDyn Nothing $ Just <$> passAndPriv
+    mEncPriv <- holdDyn Nothing $ Just <$> encPriv
     mSignedSubDyn <- fmap join . prerender (pure $ constDyn Nothing) $ do
       let getSignature cn pk = do
             pub <- liftJSM $ toPublicKey pk
             let sub = SubjectAndCert (Subject (T.unpack cn) "" Nothing Nothing pub) Nothing
             sig <- liftJSM $ rlpSign pk sub
             pure . Just $ Signed sub sig
-      widgetHold (pure Nothing) $ uncurry getSignature <$> usernameAndKeyE
-    dynText $ T.append "mSignedSubDyn: " . tshow <$> mSignedSubDyn
-    el "br" blank
+      widgetHold (pure Nothing) $ uncurry getSignature <$> privKeyE
     postCertResultEv <- fmap switchDyn . prerender (pure never) $ do
       (postCertResult :: Event t (Maybe Text)) <- urlPOST $ (,) "https://id.lambdachain.xyz/identity" <$> fmapMaybe id (updated mSignedSubDyn)
       pure postCertResult
+    keyE <- fmap (\(u,v) -> (T.drop 8 u, v)) <$> putLocalStorageItem ((\(_,u,k,a) -> ("key_for_" <> u,KeyInfo (Keccak256 k) a)) <$> tag (fromJust <$> current mEncPriv) postCertResultEv)
+    _ <- putSessionStorageItem $ (,) "login_info" . (\(p,u,k,a) -> LoginInfo (T.drop 8 u) k) <$> tag (fromJust <$> current mPassAndPriv) keyE
     setRoute $ (FrontendRoute_Home :/ ()) <$ fmapMaybe id postCertResultEv
     pure ()
 
@@ -158,6 +172,6 @@ logout
   => m ()
 logout = divClass "container" . divClass "item" $ mdo
   clickEv <- buttonClass "option-full" "Logout"
-  logoutEv <- removeStorageItem $ "mercata_username" <$ clickEv
+  logoutEv <- removeSessionStorageItem $ "login_info" <$ clickEv
   setRoute $ (FrontendRoute_Login :/ ()) <$ logoutEv
   pure ()

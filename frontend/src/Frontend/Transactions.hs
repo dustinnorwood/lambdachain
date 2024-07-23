@@ -58,13 +58,13 @@ postTransaction
      , Prerender t m
      , Adjustable t m
      )
-  => (Text, PrivateKey) -> Event t Trade -> m (Async t Text)
-postTransaction creds@(username, pk) tradeEv = do
+  => LoginInfo -> Event t Trade -> m (Async t Text)
+postTransaction loginInfo@(LoginInfo username pk) tradeEv = do
   tradeDyn <- holdDyn Nothing $ Just <$> tradeEv
   let getAddress pkE = fmap join . prerender (pure $ constDyn Nothing) $ do
         let getAddr = fmap publicKeyToAddress . liftJSM . toPublicKey
         widgetHold (pure Nothing) (fmap Just . getAddr <$> pkE)
-  addrDyn <- getAddress $ snd creds <$ tradeEv
+  addrDyn <- getAddress $ pk <$ tradeEv
   let acctStateUrl = ("https://lambdachain.xyz/strato-api/eth/v1.2/account?address=" <>) . T.pack . show <$> fmapMaybe id (updated addrDyn)
   acctStateEv <- fmap (fromMaybe blankAddressState . (listToMaybe =<<)) <$> urlGET acctStateUrl
   let reorganize stuff = case stuff of
