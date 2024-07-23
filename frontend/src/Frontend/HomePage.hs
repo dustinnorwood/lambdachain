@@ -32,7 +32,7 @@ import           Data.Maybe             (fromJust, fromMaybe, listToMaybe)
 import           Data.Ord               (Down(..))
 import           Data.Text              (Text)
 import qualified Data.Text              as T
-import           Data.Text.Encoding     (decodeUtf8, encodeUtf8)
+import           Data.Text.Encoding     (decodeUtf8, encodeUtf8, decodeUtf8')
 import           Data.Traversable       (for)
 import           Frontend.Client        (urlGET, urlPOST)
 import           Frontend.ItemList
@@ -42,6 +42,7 @@ import           Frontend.Utils
 import           Language.Javascript.JSaddle
 import           Mercata.Data.Item
 import           Mercata.Data.Trade
+import           Obelisk.Configs
 import           Obelisk.Frontend.Storage
 import           Obelisk.Route.Frontend (R, SetRoute)
 import           Reflex.Dom.Core
@@ -58,6 +59,7 @@ homePage
      , MonadIO (Performable m)
      , SetRoute t (R FrontendRoute) m
      , TriggerEvent t m
+     , HasConfigs m
      )
   => (Text, PrivateKey) -> m (Event t ())
 homePage creds = divClass "container" $ mdo

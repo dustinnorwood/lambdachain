@@ -26,6 +26,7 @@ import qualified Data.Map.Strict        as M
 import           Data.Maybe             (fromMaybe, listToMaybe)
 import qualified Data.Text              as T
 import           Data.Text              (Text)
+import           Data.Text.Encoding     (decodeUtf8')
 import           Frontend.Client        (urlGET)
 import           Frontend.ItemList
 import           Frontend.Transactions
@@ -34,6 +35,8 @@ import           JSDOM.Generated.Response (redirect)
 import           Language.Javascript.JSaddle
 import           Mercata.Data.Item
 import           Mercata.Data.Trade
+import           Network.HTTP.Types     (urlEncode)
+import           Obelisk.Configs
 import           Obelisk.Frontend.Storage
 import           Reflex.Dom.Core
 import           Text.Printf
@@ -74,6 +77,7 @@ tokenWidget
      , PerformEvent t m
      , TriggerEvent t m
      , MonadIO (Performable m)
+     , HasConfigs m
      )
   => (Text, PrivateKey) -> m (Event t ())
 tokenWidget creds = mdo
@@ -98,6 +102,7 @@ buyTokensWidget
      , PerformEvent t m
      , TriggerEvent t m
      , MonadIO (Performable m)
+     , HasConfigs m
      )
   => (Text, PrivateKey) -> m (Event t Bool)
 buyTokensWidget creds = divClass "trade-widget" $ do
@@ -127,21 +132,30 @@ buyTokensWidget creds = divClass "trade-widget" $ do
     let responseEv = finished transaction
     let (mOrderHash :: Event t (Maybe Keccak256)) = readMaybe . T.unpack . T.take 64 . T.drop 2 <$> responseEv
     mOrderHashDyn <- holdDyn Nothing mOrderHash
-    asdf <- holdDyn (Nothing,Nothing) (attach (current stripeDyn) mOrderHash)
+    asdf <- holdDyn (Nothing,Nothing) (attach (current stripeDyn) mOrderHash) 
+    let cfg = "common/route"
+        path = "config/" <> cfg
+    meCfg <- getConfig cfg >>= \case
+      Nothing -> pure . Left $ "No config file found in " <> path
+      Just bytes -> case decodeUtf8' $ urlEncode True (bytes <> "/completeOrder") of
+        Left ue -> pure . Left $ "Couldn't decode " <> path <> " : " <> T.pack (show ue)
+        Right s -> pure $ Right s
     redirectDyn <- widgetHold (pure ()) $ attach (current stripeDyn) mOrderHash <&> \(mStripe, mOrderHash) -> case liftA2 (,) mStripe mOrderHash of
       Nothing -> pure ()
       Just (stripe, orderHash) -> do
-        prerender_ blank $ do
-          let url = (paymentServiceURL stripe <> checkoutRoute stripe <> "?orderHash=" <> tshow orderHash <> "&redirectUrl=http%3A%2F%2Flocalhost%3A8000%2FcompleteOrder")
-          -- resp <- redirect (paymentServiceURL stripe <> checkoutRoute stripe <> "?orderHash=" <> tshow orderHash <> "&redirectUrl=http%3A%2F%2Flocalhost%3A8000") (Just 0)
-          _ <- liftJSM $ do
-            eval . T.unpack $ "window.location.replace(\"" <> url <> "\");"
-            -- l <- jsg1 ("window.location" :: String) ("location" :: String)
-            -- _ <- l ^. js1 ("replace" :: String) (T.unpack url)
-            -- s <- jsg ("console" :: String) 
-            -- _ <- s ^. js1 ("log" :: String) resp
+        prerender_ blank $ case meCfg of 
+          Left t -> text t
+          Right redirectUrl -> do
+            let url = paymentServiceURL stripe <> checkoutRoute stripe <> "?orderHash=" <> tshow orderHash <> "&redirectUrl=" <> redirectUrl
+            -- resp <- redirect (paymentServiceURL stripe <> checkoutRoute stripe <> "?orderHash=" <> tshow orderHash <> "&redirectUrl=http%3A%2F%2Flocalhost%3A8000") (Just 0)
+            _ <- liftJSM $ do
+              eval . T.unpack $ "window.location.replace(\"" <> url <> "\");"
+              -- l <- jsg1 ("window.location" :: String) ("location" :: String)
+              -- _ <- l ^. js1 ("replace" :: String) (T.unpack url)
+              -- s <- jsg ("console" :: String) 
+              -- _ <- s ^. js1 ("log" :: String) resp
+              pure ()
             pure ()
-          pure ()
 
     pure $ leftmost [True <$ updated redirectDyn, False <$ cancelled]
 

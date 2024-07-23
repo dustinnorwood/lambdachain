@@ -19,6 +19,7 @@ library
                , dependent-sum-template
                , echarts-jsdom
                , ghcjs-dom
+               , http-types
                , obelisk-frontend
                , obelisk-route
                , jsaddle

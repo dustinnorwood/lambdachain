@@ -99,7 +99,8 @@ register = divClass "login-page" $ do
       el "br" blank
       pure tUsername'
     clickedDyn <- holdDyn False $ leftmost [True <$ clickEv, False <$ postCertResultEv]
-    clickEv <- dynButtonClass "option-full" clickedDyn $ bool "Register" "Registering..." <$> clickedDyn
+    mClickEv <- dynButtonClass "option-full" clickedDyn $ bool "Register" "Registering..." <$> clickedDyn
+    let clickEv = fmapMaybe (bool (Just ()) Nothing . T.null) $ tag (current $ value tUsername) mClickEv
     el "br" blank
     divClass "info" $ do
       el "div" $ text "Already have an account?"
@@ -110,7 +111,7 @@ register = divClass "login-page" $ do
     srchEv <- debounce 0.5 . fmapMaybe isEmpty $ updated srch
     (searchResultsE :: Event t (Maybe [Certificate])) <- urlGET $ ("https://lambdachain.xyz/cirrus/search/Certificate?select=commonName&commonName=eq." <>) <$> srchEv
     searchResults <- holdDyn Nothing (maybe Nothing listToMaybe <$> searchResultsE)
-    let usernameEv = tagPromptlyDyn (value tUsername) clickEv
+    let usernameEv = tag (current $ value tUsername) clickEv
     (mKeyExistsE :: Event t (Text, Maybe String)) <- getStorageItem $ T.append "key_for_" <$> usernameEv
     mKeyExistsD <- holdDyn Nothing $ snd <$> mKeyExistsE
     let mKeyDoesntExistE = (\(k, mv) -> maybe (Just k) (const Nothing) mv) <$> mKeyExistsE
