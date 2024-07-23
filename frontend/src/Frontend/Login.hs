@@ -8,6 +8,7 @@ import           Blockchain.Data.Keys
 import           Blockchain.Data.Signed
 import           Blockchain.Data.Subject
 import           Blockchain.Data.SubjectAndCert
+import           Common.Utils
 import           Control.Applicative ((<|>))
 import           Control.Monad (join)
 import           Control.Monad.Fix      (MonadFix)
@@ -98,7 +99,11 @@ register = divClass "login-page" $ do
       el "br" blank
       el "br" blank
       pure tUsername'
+    dynText $ T.append "tUsername: " . tshow <$> value tUsername
+    el "br" blank
     clickedDyn <- holdDyn False $ leftmost [True <$ clickEv, False <$ postCertResultEv]
+    dynText $ T.append "clickedDyn: " . tshow <$> clickedDyn
+    el "br" blank
     mClickEv <- dynButtonClass "option-full" clickedDyn $ bool "Register" "Registering..." <$> clickedDyn
     let clickEv = fmapMaybe (bool (Just ()) Nothing . T.null) $ tag (current $ value tUsername) mClickEv
     el "br" blank
@@ -111,13 +116,20 @@ register = divClass "login-page" $ do
     srchEv <- debounce 0.5 . fmapMaybe isEmpty $ updated srch
     (searchResultsE :: Event t (Maybe [Certificate])) <- urlGET $ ("https://lambdachain.xyz/cirrus/search/Certificate?select=commonName&commonName=eq." <>) <$> srchEv
     searchResults <- holdDyn Nothing (maybe Nothing listToMaybe <$> searchResultsE)
+    dynText $ tshow <$> searchResults
+    el "br" blank
     let usernameEv = tag (current $ value tUsername) clickEv
     (mKeyExistsE :: Event t (Text, Maybe String)) <- getStorageItem $ T.append "key_for_" <$> usernameEv
     mKeyExistsD <- holdDyn Nothing $ snd <$> mKeyExistsE
+    dynText $ T.append "mKeyExistsD: " . tshow <$> mKeyExistsD
+    el "br" blank
     let mKeyDoesntExistE = (\(k, mv) -> maybe (Just k) (const Nothing) mv) <$> mKeyExistsE
     mPrivKeyD <- prerender (pure never) $ do
       privKey <- liftIO newPrivateKey
       pure $ fmap (flip (,) privKey) <$> mKeyDoesntExistE
+    mPrivKey <- holdDyn Nothing $ switchDyn mPrivKeyD
+    dynText $ T.append "mPrivKey: " . tshow <$> mPrivKey
+    el "br" blank
     let privKeyE = fmapMaybe id $ switchDyn mPrivKeyD
     keyE <- putStorageItem privKeyE
     let usernameAndKeyE = (\(k,v) -> (T.drop 8 k, v)) <$> keyE
@@ -129,6 +141,8 @@ register = divClass "login-page" $ do
             sig <- liftJSM $ rlpSign pk sub
             pure . Just $ Signed sub sig
       widgetHold (pure Nothing) $ uncurry getSignature <$> usernameAndKeyE
+    dynText $ T.append "mSignedSubDyn: " . tshow <$> mSignedSubDyn
+    el "br" blank
     postCertResultEv <- fmap switchDyn . prerender (pure never) $ do
       (postCertResult :: Event t (Maybe Text)) <- urlPOST $ (,) "https://id.lambdachain.xyz/identity" <$> fmapMaybe id (updated mSignedSubDyn)
       pure postCertResult
