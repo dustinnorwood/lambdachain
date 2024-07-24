@@ -8,7 +8,12 @@
     "icons": [
         {
           "src": "lambdachain_full.png",
-          "sizes": "2450x2450",
+          "sizes": "512x512",
+          "type": "image/png"
+        },
+        {
+          "src": "lambdachain.png",
+          "sizes": "384x384",
           "type": "image/png"
         }
     ]

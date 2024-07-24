@@ -18,12 +18,9 @@ import           Blockchain.Data.RLP
 import           Blockchain.Data.Util
 import           Blockchain.Data.ExtendedWord
 import           Blockchain.Data.Keccak256
+import           Control.Applicative ((<|>))
 import           Control.Lens hiding ((.=))
 import           Control.Monad ((<=<))
-import qualified Crypto.PubKey.ECC.ECDSA as E
-import           Crypto.PubKey.ECC.Generate
-import           Crypto.PubKey.ECC.Types
-import           Crypto.Random.Entropy
 import           Data.Aeson
 import           Data.Aeson.Key
 import           Data.Bits ((.|.), shiftL, shiftR, xor)
@@ -39,6 +36,7 @@ import           Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import           Data.Word
 import           GHC.Generics
 import           Language.Javascript.JSaddle
+import           Text.Read
 
 data Signature = Signature {
   r :: Word256,
@@ -167,9 +165,18 @@ newPrivateKey = do
   mPK <- liftJSM $ do
     s <- jsg ("Secp256k1" :: String) 
     pkBN <- s ^. js0 "newPrivateKey"
-    c <- jsg ("console" :: String) 
-    _ <- c ^. js1 "log" pkBN
-    fromJSVal pkBN
+    -- c <- jsg ("console" :: String) 
+    (pure . PrivateKey <=< readMaybe <=< readMaybe <=< id) <$> fromJSVal pkBN
+    -- _ <- c ^. js1 "log" mPK
+    -- mPKText <- fromJSVal pkBN
+    -- _ <- c ^. js1 "log" mPKText
+    -- let mPK' = either (const Nothing) Just . B16.decode . encodeUtf8 . read =<< mPKText
+    -- let mPK'' = byteStringToWord256 <$> mPK'
+    -- let mPK''' = PrivateKey <$> mPK''
+
+    -- _ <- c ^. js1 "log" (decodeUtf8 . B16.encode <$> mPK')
+    -- _ <- c ^. js1 "log" mPK''
+    -- _ <- c ^. js1 "log" mPK'''
   case mPK of
     Just pk -> pure pk
     Nothing -> newPrivateKey

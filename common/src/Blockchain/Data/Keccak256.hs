@@ -15,7 +15,7 @@ module Blockchain.Data.Keccak256 where
 import           Blockchain.Data.RLP
 import           Blockchain.Data.Util
 import           Blockchain.Data.ExtendedWord
-import           Crypto.Hash
+import           Crypto.Hash.Keccak
 import           Data.Aeson
 import           Data.ByteArray
 import           Data.ByteString (ByteString)
@@ -64,9 +64,7 @@ emptyHash = hashMsg ""
 {-# NOINLINE emptyHash #-}
 
 hashMsg :: ByteString -> Keccak256
-hashMsg = Keccak256
-        . convert
-        . hashWith Keccak_256
+hashMsg = Keccak256 . keccak256
 
 rlpHash :: RLPSerializable a => a -> Keccak256
 rlpHash = hashMsg . rlpSerialize . rlpEncode

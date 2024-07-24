@@ -17,11 +17,6 @@ import           Blockchain.Data.RLP
 import           Blockchain.Data.Util
 import           Control.Lens
 import           Control.Monad ((<=<))
-import           Crypto.Hash
-import qualified Crypto.PubKey.ECC.ECDSA as E
-import           Crypto.PubKey.ECC.Generate
-import           Crypto.PubKey.ECC.Types
-import           Crypto.Random.Entropy
 import           Data.Aeson
 import           Data.Bits ((.|.), shiftL, shiftR)
 import           Data.ByteArray

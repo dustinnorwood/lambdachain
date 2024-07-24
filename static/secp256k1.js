@@ -18,7 +18,12 @@
     }
 
     function newPrivateKey() {
-        return uint256(uint256(randomBytes(32)).umod(N))//TODO red
+        return JSON.stringify(uint256(uint256(randomBytes(32)).umod(N), 16)) //TODO red
+    }
+
+    function consoleLogBN(bn) {
+        console.log("BN: ", bn);
+        console.log("BN: ", JSON.stringify(bn));
     }
 
     const A  = uint256(0)
@@ -258,6 +263,7 @@
 
     exports.uint256 = uint256
     exports.newPrivateKey = newPrivateKey
+    exports.consoleLogBN = consoleLogBN
     exports.ecsign = ecsign
     exports.ecrecover = ecrecover
     exports.generatePublicKeyFromPrivateKeyData = generatePublicKeyFromPrivateKeyData
