@@ -5,11 +5,14 @@ module Frontend.Login where
 import Reflex.Dom.Core
 
 import           Blockchain.Data.Address
+import           Blockchain.Data.ExtendedWord
 import           Blockchain.Data.Keccak256
 import           Blockchain.Data.Keys
+import           Blockchain.Data.RLP
 import           Blockchain.Data.Signed
 import           Blockchain.Data.Subject
 import           Blockchain.Data.SubjectAndCert
+import           Crypto.Hash.Keccak
 import           Common.Utils
 import           Control.Applicative ((<|>))
 import           Control.Lens        ((<&>))
@@ -17,11 +20,19 @@ import           Control.Monad (join)
 import           Control.Monad.Fix      (MonadFix)
 import           Control.Monad.IO.Class
 import           Data.Aeson
+import           Data.Bifunctor (first)
+import           Data.Bits              (shiftR, (.&.))
 import           Data.Bool              (bool)
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Char8 as C8
+import qualified Data.ByteString.Base16 as B16
+import qualified Data.ByteString.Lazy as BL
+import           Data.Char (chr)
 import           Data.Maybe
 import           Data.Text              (Text)
 import qualified Data.Text    as T
+import           Data.Text.Encoding (decodeUtf8, encodeUtf8)
+import           Data.Word
 import           Language.Javascript.JSaddle
 import           Obelisk.Frontend.Storage
 import           Obelisk.Route          (pattern (:/), R)
@@ -31,6 +42,7 @@ import           Text.Read              (readMaybe)
 import           Common.Route
 import           Frontend.Client (urlGET, urlPOST)
 import           Frontend.Utils  (buttonClass, dynButtonClass)
+import Crypto.Hash.Keccak (keccak256Rate)
 
 newtype Certificate = Certificate {
   commonName :: Text
@@ -39,6 +51,27 @@ newtype Certificate = Certificate {
 instance FromJSON Certificate where
   parseJSON = withObject "Certificate" $ \o ->
     Certificate <$> (fromMaybe "" <$> (o .:? "commonName"))
+
+hexNibble :: Word8 -> Word8
+hexNibble 0x0 = 0x30
+hexNibble 0x1 = 0x31
+hexNibble 0x2 = 0x32
+hexNibble 0x3 = 0x33
+hexNibble 0x4 = 0x34
+hexNibble 0x5 = 0x35
+hexNibble 0x6 = 0x36
+hexNibble 0x7 = 0x37
+hexNibble 0x8 = 0x38
+hexNibble 0x9 = 0x39
+hexNibble 0xa = 0x61
+hexNibble 0xb = 0x62
+hexNibble 0xc = 0x63
+hexNibble 0xd = 0x64
+hexNibble 0xe = 0x65
+hexNibble 0xf = 0x66
+
+hex :: Word8 -> [Word8]
+hex w = [hexNibble $ (w `shiftR` 4) .&. 0xf, hexNibble $ w .&. 0xf]
 
 login
   :: ( DomBuilder t m
@@ -148,16 +181,14 @@ register = divClass "login-page" $ do
         encPriv = (\(p,u,k,a) -> (p,u, encryptPrivateKey p k, a)) <$> passAndPriv
     mPassAndPriv <- holdDyn Nothing $ Just <$> passAndPriv
     mEncPriv <- holdDyn Nothing $ Just <$> encPriv
-    mSignedSubDyn <- fmap join . prerender (pure $ constDyn Nothing) $ do
+    postCertResultEv :: Event t (Maybe Text) <- fmap switchDyn . prerender (pure never) $ do
       let getSignature cn pk = do
             pub <- liftJSM $ toPublicKey pk
             let sub = SubjectAndCert (Subject (T.unpack cn) "" Nothing Nothing pub) Nothing
             sig <- liftJSM $ rlpSign pk sub
             pure . Just $ Signed sub sig
-      widgetHold (pure Nothing) $ uncurry getSignature <$> privKeyE
-    postCertResultEv <- fmap switchDyn . prerender (pure never) $ do
-      (postCertResult :: Event t (Maybe Text)) <- urlPOST $ (,) "https://id.lambdachain.xyz/identity" <$> fmapMaybe id (updated mSignedSubDyn)
-      pure postCertResult
+      mSignedSubDyn <- widgetHold (pure Nothing) $ uncurry getSignature <$> privKeyE
+      urlPOST $ (,) "https://id.lambdachain.xyz/identity" <$> fmapMaybe id (updated mSignedSubDyn)
     keyE <- fmap (\(u,v) -> (T.drop 8 u, v)) <$> putLocalStorageItem ((\(_,u,k,a) -> ("key_for_" <> u,KeyInfo (Keccak256 k) a)) <$> tag (fromJust <$> current mEncPriv) postCertResultEv)
     _ <- putSessionStorageItem $ (,) "login_info" . (\(p,u,k,a) -> LoginInfo (T.drop 8 u) k) <$> tag (fromJust <$> current mPassAndPriv) keyE
     setRoute $ (FrontendRoute_Home :/ ()) <$ fmapMaybe id postCertResultEv

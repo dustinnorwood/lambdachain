@@ -18,7 +18,6 @@ library
                , ghcjs-dom
                , jsaddle
                , jsaddle-dom
-               , keccak
                , lens
                , memory
                , monad-control
@@ -54,6 +53,8 @@ library
     Blockchain.Data.Transaction
     Blockchain.Data.TransactionResult
     Blockchain.Data.Util
+    Crypto.Hash.Keccak
+    Crypto.Hash.Keccak256
     Common.Api.Errors
     Common.Api.Namespace
     Common.Api.Validation

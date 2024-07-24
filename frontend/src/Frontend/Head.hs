@@ -41,11 +41,19 @@ htmlHead = do
   el "title" $ text "LambdaChain"
   -- these are not the typesafe links so that the fonts load relatively to the css.
   elAttr "link" ("rel"=:"manifest" <> "href"=:"static/manifest.json") blank
-  elAttr "link" ("rel" =: "icon" <> "href" =: "static/lambdachain.png") blank
+  elAttr "link" ("rel" =: "icon" <> "href" =: "static/lambdachain_512.png") blank
   elAttr "link" ("rel" =: "preconnect" <> "href" =: "https://fonts.googleapis.com") blank
   elAttr "link" ("rel" =: "preconnect" <> "href" =: "https://fonts.gstatic.com") blank
   elAttr "link" ("rel" =: "stylesheet" <> "href" =: "https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=DM+Serif+Display:ital@0;1&display=swap") blank
   elAttr "link" ("rel" =: "stylesheet" <> "href" =: "https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap") blank
+  elAttr "link" ("rel" =: "apple-touch-startup-image" <> "href" =: "static/launch-640x1136.png"  <> "media" =: "(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)") blank
+  elAttr "link" ("rel" =: "apple-touch-startup-image" <> "href" =: "static/launch-750x1294.png"  <> "media" =: "(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)") blank
+  elAttr "link" ("rel" =: "apple-touch-startup-image" <> "href" =: "static/launch-1242x2148.png" <> "media" =: "(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)") blank
+  elAttr "link" ("rel" =: "apple-touch-startup-image" <> "href" =: "static/launch-1125x2436.png" <> "media" =: "(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)") blank
+  elAttr "link" ("rel" =: "apple-touch-startup-image" <> "href" =: "static/launch-1536x2048.png" <> "media" =: "(min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: portrait)") blank
+  elAttr "link" ("rel" =: "apple-touch-startup-image" <> "href" =: "static/launch-1668x2224.png" <> "media" =: "(min-device-width: 834px) and (max-device-width: 834px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: portrait)") blank
+  elAttr "link" ("rel" =: "apple-touch-startup-image" <> "href" =: "static/launch-2048x2732.png" <> "media" =: "(min-device-width: 1024px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: portrait)") blank
+
   elAttr "meta" ("name"=:"viewport" <> "content"=:"width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no, viewport-fit=cover") blank
   elAttr "meta" ("name"=:"mobile-web-app-capable" <> "content"=:"yes") blank
   elAttr "meta" ("name"=:"apple-mobile-web-app-capable" <> "content"=:"yes") blank

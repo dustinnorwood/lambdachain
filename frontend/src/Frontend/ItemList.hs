@@ -260,11 +260,12 @@ quantityWidget
      )
   => Maybe Integer -> Dynamic t Integer -> m (Dynamic t (Maybe Integer))
 quantityWidget mInitialValue availableQuantity = divClass "form-item" $ do
-  -- el "div" $ text "Quantity"
-  tQuantity <- inputElement $ def
-    & inputElementConfig_initialValue .~ maybe "" tshow mInitialValue
-    & inputElementConfig_elementConfig . elementConfig_initialAttributes .~
-      ("placeholder" =: "Quantity" <> "type" =: "text")
+  tQuantity <- divClass "form-item-item" $ do
+    divClass "form-item-item-text-wrapper" $ divClass "form-item-item-text" $ el "div" $ text "Quantity"
+    divClass "form-item-item-entry" $ inputElement $ def
+      & inputElementConfig_initialValue .~ maybe "" tshow mInitialValue
+      & inputElementConfig_elementConfig . elementConfig_initialAttributes .~
+        ("placeholder" =: "Quantity" <> "type" =: "text")
   let quantityDyn = T.unpack <$> value tQuantity
       isValid aq q = if q > aq then Left $ "That's too many! There are only " <> tshow aq <> " available"
                                else Right q
@@ -282,11 +283,12 @@ priceWidget
      )
   => Maybe Double -> m (Dynamic t (Maybe Double))
 priceWidget mInitialValue = divClass "form-item" $ do
-  -- el "div" $ text "Price"
-  tPrice <- inputElement $ def
-    & inputElementConfig_initialValue .~ maybe "" printPrice mInitialValue
-    & inputElementConfig_elementConfig . elementConfig_initialAttributes .~
-      ("placeholder" =: "Price" <> "type" =: "text")
+  tPrice <- divClass "form-item-item" $ do
+    divClass "form-item-item-text-wrapper" $ divClass "form-item-item-text" $ text "Price"
+    divClass "form-item-item-entry" $ inputElement $ def
+      & inputElementConfig_initialValue .~ maybe "" printPrice mInitialValue
+      & inputElementConfig_elementConfig . elementConfig_initialAttributes .~
+        ("placeholder" =: "Price" <> "type" =: "text")
   let priceDyn = T.unpack <$> value tPrice
       validPrice = (\pd -> maybe (Left $ if null pd then "" else "What? That's not a number") Right $ readMaybe pd <|> readMaybe (pd <> "0")) <$> priceDyn
   divClass "error" $ dynText $ either id (const "") <$> validPrice

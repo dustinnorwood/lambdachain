@@ -203,6 +203,7 @@ input[type="password"] {
 }
 
 .trade-params-widget {
+  width: 100%;
   display: flex;
   justify-content: space-between;
 }
@@ -213,9 +214,32 @@ input[type="password"] {
 }
 
 .form-item {
+  margin-top: 5px;
+}
+
+.form-item-item {
   display: flex;
   justify-content: space-between;
-  margin-top: 5px;
+}
+
+.form-item-item-wrapper {
+  width: 20%;
+  margin-right: 10px;
+  vertical-align: middle;
+  display: flex;
+  justify-content: space-between;
+}
+
+.form-item-item-text {
+  font-family: "DM Serif Display", serif;
+  font-weight: 400;
+  font-style: normal;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.form-item-item-entry {
+  width: 80%;
 }
 
 .buy {
@@ -326,6 +350,7 @@ input[type="password"] {
   width: 20px;
   height: 20px;
   margin-top: 5px;
+  margin-left: 10px;
   border-radius: 6px;
   text-align: center;
 }

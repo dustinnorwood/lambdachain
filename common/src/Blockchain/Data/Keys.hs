@@ -198,6 +198,9 @@ toPublicKey pk = liftJSM $ do
   s <- jsg ("Secp256k1" :: String) 
   pkBN <- s ^. js2 "uint256" pk ("hex" :: String)
   jsPub <- s ^. js1 "generatePublicKeyFromPrivateKeyData" pkBN
+  c <- jsg ("console" :: String) 
+  _ <- c ^. js1 "log" pkBN
+  _ <- c ^. js1 "log" jsPub
   fromJSValUnchecked jsPub
 
 publicKeyToAddress :: PublicKey -> Address
@@ -221,7 +224,11 @@ sign pk msg = liftJSM $ do
   pub0 <- verify' 0 sig msg
   if pub == pub0
     then pure $ Signature (r sig) (s sig) 0
-    else pure $ Signature (r sig) (s sig) 1
+    else do
+      pub1 <- verify' 1 sig msg
+      if pub == pub1
+        then pure $ Signature (r sig) (s sig) 1
+        else error $ "Could not verify signature: " ++ show pub ++ ", " ++ show sig
 
 verify :: MonadJSM m => Signature -> Keccak256 -> m PublicKey
 verify sig@(Signature _ _ v) = verify' v sig

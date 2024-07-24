@@ -63,8 +63,11 @@ emptyHash :: Keccak256
 emptyHash = hashMsg ""
 {-# NOINLINE emptyHash #-}
 
+hashMsg' :: ByteString -> Keccak256
+hashMsg' = Keccak256 . BS.pack . keccak256 . BS.unpack
+
 hashMsg :: ByteString -> Keccak256
-hashMsg = Keccak256 . keccak256
+hashMsg = hashMsg'
 
 rlpHash :: RLPSerializable a => a -> Keccak256
 rlpHash = hashMsg . rlpSerialize . rlpEncode

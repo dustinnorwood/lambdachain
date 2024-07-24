@@ -25,7 +25,7 @@ project ./. ({ pkgs, hackGet, ... }: {
     echarts-jsdom = dontCheck ((import ./dep/echarts-jsdom) self super);
     reflex-dom-storage = dontCheck ((import ./dep/reflex-dom-storage) self super);
     html-parse = dontCheck ((import ./dep/html-parse) self super);
-    keccak = dontCheck (self.callHackage "keccak" "0.2.0" {});
+    # keccak = dontCheck (self.callHackage "keccak" "0.1.1" {});
     monad-alter = dontCheck ((import ./dep/monad-alter) self super);
     servant-reflex = dontCheck ((import ./dep/servant-reflex) self super);
     servant-snap = dontCheck ((import ./dep/servant-snap) self super);

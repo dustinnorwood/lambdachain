@@ -7,13 +7,13 @@
     "start_url": "/",
     "icons": [
         {
-          "src": "lambdachain_full.png",
-          "sizes": "512x512",
+          "src": "lambdachain_2450.png",
+          "sizes": "2450x2450",
           "type": "image/png"
         },
         {
-          "src": "lambdachain.png",
-          "sizes": "384x384",
+          "src": "lambdachain_512.png",
+          "sizes": "512x512",
           "type": "image/png"
         }
     ]
